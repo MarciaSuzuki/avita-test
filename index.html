@@ -1,0 +1,3812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AViTA – Language Archive Tagger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-green: #3F3E20;
+            --brand-terracotta: #BE4A01;
+            --brand-sand: #C5C29F;
+            --bg: #F6F5EB;
+            --bg-card: #ffffff;
+            --bg-warm: #F6F5EB;
+            --text-light: #3F3E20;
+            --text-dark: #0A0703;
+            
+            /* Layer colors - earthy palette */
+            --color-event: #BE4A01;
+            --color-participants: #777D45;
+            --color-modifiers: #89AAA3;
+            --color-discourse: #8B7355;
+            --color-pragmatics: #5D8A83;
+            --color-emotion: #C4785C;
+            --color-concepts: #777D45;
+            --color-morpheme: #89AAA3;
+            --color-sufficient: #777D45;
+            --color-needs-more: #BE4A01;
+            --color-not-tagged: #C5C29F;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background: var(--bg); 
+            color: var(--text-dark); 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--brand-green);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            color: #F6F5EB;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .logo-badge {
+            background: var(--brand-terracotta);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+        }
+        
+        .segment-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .segment-nav button {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .segment-nav button:hover { background: rgba(255,255,255,0.25); }
+        .segment-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        .segment-info { 
+            font-size: 0.9rem; 
+            min-width: 90px; 
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        /* Main Layout */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 16px;
+        }
+        
+        /* Audio Player Card */
+        .audio-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .segment-number {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--brand-sand);
+            line-height: 1;
+        }
+        
+        .segment-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            margin-bottom: 4px;
+        }
+        
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .play-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--brand-green);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(63, 62, 32, 0.25);
+            transition: transform 0.15s;
+        }
+        
+        .play-btn:hover { transform: scale(1.05); }
+        .play-btn:active { transform: scale(0.95); }
+        
+        .play-icon {
+            width: 0; height: 0;
+            border-left: 20px solid #F6F5EB;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            margin-left: 4px;
+        }
+        
+        .pause-icon {
+            width: 18px; height: 22px;
+            border-left: 5px solid #F6F5EB;
+            border-right: 5px solid #F6F5EB;
+        }
+        
+        .speed-btn {
+            background: rgba(63, 62, 32, 0.1);
+            border: 1px solid var(--brand-sand);
+            color: var(--brand-green);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .time-display {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            min-width: 80px;
+            color: var(--brand-green);
+        }
+        
+        /* Waveform visualization */
+        .waveform {
+            height: 48px;
+            background: rgba(197, 194, 159, 0.2);
+            border-radius: 8px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 0 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .waveform-bar {
+            width: 4px;
+            background: var(--brand-green);
+            border-radius: 2px;
+            transition: height 0.1s;
+        }
+        
+        .waveform-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: rgba(190, 74, 1, 0.2);
+            pointer-events: none;
+        }
+        
+        /* ============ TIMELINE WAVEFORM (for Concepts layer) ============ */
+        .timeline-container {
+            margin-top: 16px;
+            background: rgba(197, 194, 159, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .timeline-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-waveform {
+            height: 80px;
+            background: rgba(197, 194, 159, 0.2);
+            border-radius: 8px;
+            position: relative;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+        
+        .timeline-waveform.selecting {
+            cursor: col-resize;
+        }
+        
+        .timeline-bars {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            height: 100%;
+            padding: 0 8px;
+            pointer-events: none;
+        }
+        
+        .timeline-bar {
+            width: 3px;
+            background: var(--brand-green);
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+        
+        .timeline-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--brand-terracotta);
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 4px rgba(190, 74, 1, 0.5);
+        }
+        
+        .timeline-selection {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            background: rgba(119, 125, 69, 0.2);
+            border-left: 2px solid var(--color-concepts);
+            border-right: 2px solid var(--color-concepts);
+            pointer-events: none;
+        }
+        
+        .timeline-selection.active {
+            background: rgba(119, 125, 69, 0.35);
+        }
+        
+        /* Concept regions on timeline */
+        .concept-region {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            background: rgba(119, 125, 69, 0.2);
+            border: 2px solid var(--color-concepts);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--color-concepts);
+            cursor: pointer;
+            transition: all 0.15s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 4px;
+            min-width: 30px;
+        }
+        
+        .concept-region:hover {
+            background: rgba(119, 125, 69, 0.35);
+            transform: scaleY(1.05);
+        }
+        
+        .concept-region .delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: var(--brand-terracotta);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.6rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .concept-region:hover .delete-btn {
+            display: flex;
+        }
+        
+        /* Time markers */
+        .timeline-markers {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+        
+        /* Selection info */
+        .selection-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(119, 125, 69, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(119, 125, 69, 0.3);
+            display: none;
+        }
+        
+        .selection-info.visible {
+            display: block;
+        }
+        
+        .selection-times {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 16px;
+        }
+        
+        .selection-times span {
+            color: var(--color-concepts);
+            font-weight: 700;
+        }
+        
+        .concept-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .play-selection-btn {
+            background: rgba(63, 62, 32, 0.1);
+            border: 2px solid rgba(63, 62, 32, 0.3);
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        
+        .play-selection-btn:hover {
+            background: rgba(63, 62, 32, 0.15);
+            border-color: var(--color-concepts);
+        }
+        
+        .play-selection-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .play-selection-btn.playing {
+            background: rgba(119, 125, 69, 0.2);
+            border-color: var(--color-concepts);
+        }
+        
+        .play-selection-btn .play-sel-icon {
+            width: 0;
+            height: 0;
+            border-left: 12px solid var(--brand-green);
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            margin-left: 3px;
+        }
+        
+        .play-selection-btn .stop-sel-icon {
+            width: 12px;
+            height: 12px;
+            background: var(--brand-green);
+            border-radius: 2px;
+        }
+        
+        /* Concept type toggle */
+        .concept-type-toggle {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .type-toggle-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid rgba(63, 62, 32, 0.2);
+            background: rgba(63, 62, 32, 0.05);
+            color: rgba(63, 62, 32, 0.7);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .type-toggle-btn:hover {
+            background: rgba(63, 62, 32, 0.1);
+        }
+        
+        .type-toggle-btn.active {
+            border-color: var(--color-concepts);
+            background: rgba(119, 125, 69, 0.15);
+            color: var(--color-concepts);
+        }
+        
+        .type-toggle-btn.morpheme.active {
+            border-color: var(--color-morpheme);
+            background: rgba(137, 170, 163, 0.15);
+            color: var(--color-morpheme);
+        }
+        
+        /* Concept input with autocomplete */
+        .concept-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .concept-input {
+            width: 100%;
+            background: rgba(63, 62, 32, 0.05);
+            border: 2px solid rgba(63, 62, 32, 0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--brand-green);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        
+        .concept-input:focus {
+            outline: none;
+            border-color: var(--color-concepts);
+        }
+        
+        .concept-input::placeholder {
+            color: rgba(63, 62, 32, 0.4);
+        }
+        
+        /* Dictionary dropdown */
+        .dictionary-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 2px solid var(--color-concepts);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(63, 62, 32, 0.15);
+        }
+        
+        .dictionary-dropdown.visible {
+            display: block;
+        }
+        
+        .dictionary-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(63, 62, 32, 0.1);
+            transition: background 0.1s;
+        }
+        
+        .dictionary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dictionary-item:hover {
+            background: rgba(119, 125, 69, 0.1);
+        }
+        
+        .dictionary-item.selected {
+            background: rgba(119, 125, 69, 0.2);
+        }
+        
+        .dictionary-item .label {
+            font-weight: 600;
+        }
+        
+        .dictionary-item .count {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            background: rgba(63, 62, 32, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .dictionary-item .new-badge {
+            font-size: 0.7rem;
+            color: var(--color-concepts);
+            font-style: italic;
+        }
+        
+        /* Morpheme palette */
+        .morpheme-palette {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 12px;
+            background: rgba(137, 170, 163, 0.08);
+            border-radius: 10px;
+            border: 1px solid rgba(137, 170, 163, 0.25);
+        }
+        
+        .morpheme-palette.visible {
+            display: flex;
+        }
+        
+        .morpheme-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .morpheme-section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-morpheme);
+            opacity: 0.9;
+            font-weight: 700;
+        }
+        
+        .morpheme-section-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .morpheme-btn {
+            padding: 5px 10px;
+            border: 1px solid rgba(137, 170, 163, 0.5);
+            background: rgba(137, 170, 163, 0.1);
+            color: var(--color-morpheme);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .morpheme-btn:hover {
+            background: rgba(137, 170, 163, 0.2);
+            border-color: var(--color-morpheme);
+        }
+        
+        .morpheme-btn.selected {
+            background: rgba(137, 170, 163, 0.25);
+            border-color: var(--color-morpheme);
+        }
+        
+        .morpheme-custom-row {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .morpheme-custom-input {
+            flex: 1;
+            padding: 6px 10px;
+            background: rgba(63, 62, 32, 0.05);
+            border: 1px solid rgba(137, 170, 163, 0.4);
+            border-radius: 8px;
+            color: var(--brand-green);
+            font-size: 0.8rem;
+        }
+        
+        .morpheme-custom-input:focus {
+            outline: none;
+            border-color: var(--color-morpheme);
+        }
+        
+        .morpheme-custom-input::placeholder {
+            color: rgba(63, 62, 32, 0.4);
+        }
+        
+        .morpheme-custom-btn {
+            padding: 6px 12px;
+            background: var(--color-morpheme);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        .morpheme-custom-btn:hover {
+            background: #5D8A83;
+        }
+        
+        /* Dictionary panel */
+        .dictionary-panel {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(197, 194, 159, 0.15);
+            border-radius: 10px;
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .dictionary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .dictionary-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+        
+        .dictionary-count {
+            font-size: 0.8rem;
+            color: var(--color-concepts);
+            font-weight: 600;
+        }
+        
+        .dictionary-entries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .dictionary-entry {
+            background: rgba(119, 125, 69, 0.1);
+            border: 1px solid rgba(119, 125, 69, 0.3);
+            border-radius: 14px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .dictionary-entry .entry-count {
+            background: rgba(119, 125, 69, 0.25);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        .dictionary-entry.morpheme {
+            background: rgba(137, 170, 163, 0.1);
+            border-color: rgba(137, 170, 163, 0.3);
+        }
+        
+        .dictionary-entry.morpheme .entry-count {
+            background: rgba(137, 170, 163, 0.25);
+        }
+        
+        /* Sufficiency status indicators */
+        .sufficiency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        .sufficiency-badge.sufficient {
+            background: rgba(39, 174, 96, 0.2);
+            color: var(--color-sufficient);
+        }
+        
+        .sufficiency-badge.needs-more {
+            background: rgba(230, 126, 34, 0.2);
+            color: var(--color-needs-more);
+        }
+        
+        .sufficiency-badge.not-tagged {
+            background: rgba(149, 165, 166, 0.2);
+            color: var(--color-not-tagged);
+        }
+        
+        /* Sufficiency notice when selecting known concept */
+        .sufficiency-notice {
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+        }
+        
+        .sufficiency-notice.visible {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sufficiency-notice.sufficient {
+            background: rgba(39, 174, 96, 0.15);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+        
+        .sufficiency-notice.needs-more {
+            background: rgba(230, 126, 34, 0.15);
+            border: 1px solid rgba(230, 126, 34, 0.3);
+        }
+        
+        .sufficiency-notice .notice-icon {
+            font-size: 1.2rem;
+        }
+        
+        .sufficiency-notice .notice-text {
+            flex: 1;
+        }
+        
+        .sufficiency-notice .notice-text strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .sufficiency-notice .notice-text small {
+            opacity: 0.8;
+        }
+        
+        .skip-btn {
+            background: rgba(63, 62, 32, 0.1);
+            border: 1px solid rgba(63, 62, 32, 0.2);
+            color: var(--brand-green);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .skip-btn:hover {
+            background: rgba(63, 62, 32, 0.15);
+        }
+        
+        /* Needs attention panel */
+        .needs-attention-panel {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(230, 126, 34, 0.1);
+            border: 1px solid rgba(230, 126, 34, 0.3);
+            border-radius: 10px;
+        }
+        
+        .needs-attention-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .needs-attention-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-needs-more);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .needs-attention-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .needs-attention-item {
+            background: rgba(230, 126, 34, 0.15);
+            border: 1px solid rgba(230, 126, 34, 0.4);
+            border-radius: 14px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--color-needs-more);
+        }
+        
+        .needs-attention-item .item-count {
+            background: rgba(230, 126, 34, 0.3);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        .needs-attention-item .item-need {
+            font-size: 0.65rem;
+            opacity: 0.8;
+        }
+        
+        /* Progress bar for sufficiency */
+        .sufficiency-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .sufficiency-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        .sufficiency-bar-fill.sufficient {
+            background: var(--color-sufficient);
+        }
+        
+        .sufficiency-bar-fill.needs-more {
+            background: var(--color-needs-more);
+        }
+        
+        .sufficiency-bar-fill.not-tagged {
+            background: var(--color-not-tagged);
+        }
+        
+        /* Dictionary entry with sufficiency */
+        .dictionary-entry {
+            background: rgba(119, 125, 69, 0.1);
+            border: 1px solid rgba(119, 125, 69, 0.3);
+            border-radius: 14px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        
+        .dictionary-entry.sufficient {
+            border-color: rgba(119, 125, 69, 0.5);
+        }
+        
+        .dictionary-entry.needs-more {
+            border-color: rgba(190, 74, 1, 0.5);
+        }
+        
+        .dictionary-entry .entry-count {
+            background: rgba(119, 125, 69, 0.25);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        .dictionary-entry .entry-status {
+            font-size: 0.7rem;
+        }
+        
+        .dictionary-entry.morpheme {
+            background: rgba(137, 170, 163, 0.1);
+            border-color: rgba(137, 170, 163, 0.3);
+        }
+        
+        .dictionary-entry.morpheme .entry-count {
+            background: rgba(137, 170, 163, 0.25);
+        }
+        
+        /* Variation tracking */
+        .variation-info {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        .variation-warning {
+            color: var(--color-needs-more);
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        
+        .add-concept-btn {
+            background: var(--color-concepts);
+            color: var(--brand-green);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        
+        .add-concept-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .add-concept-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Concept chips list */
+        .concepts-list {
+            margin-top: 16px;
+        }
+        
+        .concepts-list-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        
+        .concept-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .concept-chip {
+            background: rgba(119, 125, 69, 0.1);
+            border: 2px solid var(--color-concepts);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-concepts);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .concept-chip:hover {
+            background: rgba(119, 125, 69, 0.2);
+        }
+        
+        .concept-chip .time-range {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+        
+        .concept-chip .remove-btn {
+            width: 18px;
+            height: 18px;
+            background: rgba(190, 74, 1, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .concept-chip .remove-btn:hover {
+            background: var(--brand-terracotta);
+        }
+        
+        /* Quick-tag from participants */
+        .quick-tags {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .quick-tags-label {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        
+        .quick-tag-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .quick-tag-btn {
+            background: rgba(119, 125, 69, 0.1);
+            border: 1px solid var(--color-participants);
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            color: var(--color-participants);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .quick-tag-btn:hover {
+            background: rgba(119, 125, 69, 0.2);
+        }
+        
+        .quick-tag-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* Instructions overlay */
+        .timeline-instructions {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+        }
+        
+        .timeline-instructions .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-instructions p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        /* Layer Progress */
+        .layer-progress {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .layer-dot {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(197, 194, 159, 0.4);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .layer-dot.active { background: var(--brand-terracotta); }
+        .layer-dot.done { background: var(--color-event); }
+        
+        .layer-dot[data-layer="event"].done { background: var(--color-event); }
+        .layer-dot[data-layer="participants"].done { background: var(--color-participants); }
+        .layer-dot[data-layer="modifiers"].done { background: var(--color-modifiers); }
+        .layer-dot[data-layer="discourse"].done { background: var(--color-discourse); }
+        .layer-dot[data-layer="pragmatics"].done { background: var(--color-pragmatics); }
+        .layer-dot[data-layer="emotion"].done { background: var(--color-emotion); }
+        .layer-dot[data-layer="concepts"].done { background: var(--color-concepts); }
+        
+        /* Layer dot tooltips */
+        .layer-dot::after {
+            content: attr(data-layer);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            text-transform: capitalize;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+        
+        .layer-dot:hover::after {
+            opacity: 1;
+        }
+        
+        /* Question Card */
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--brand-terracotta);
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+        }
+        
+        .question-layer {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .layer-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        
+        .question-hint {
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+        
+        /* Options Grid */
+        .options-container {
+            margin-bottom: 16px;
+        }
+        
+        .options-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            margin-bottom: 10px;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .option-btn {
+            background: rgba(197, 194, 159, 0.15);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 14px 12px;
+            color: var(--brand-green);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        
+        .option-btn:hover {
+            background: rgba(197, 194, 159, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .option-btn.selected {
+            border-color: var(--brand-terracotta);
+            background: rgba(190, 74, 1, 0.1);
+        }
+        
+        .option-btn .icon {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+        }
+        
+        .option-btn .label {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .option-btn .sublabel {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+        
+        /* Multi-select chips */
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .chip {
+            background: rgba(197, 194, 159, 0.2);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.15s;
+            color: var(--brand-green);
+        }
+        
+        .chip:hover { background: rgba(197, 194, 159, 0.35); }
+        
+        .chip.selected {
+            border-color: var(--brand-terracotta);
+            background: rgba(190, 74, 1, 0.15);
+        }
+        
+        /* Text input for roles */
+        .role-input-group {
+            margin-bottom: 12px;
+        }
+        
+        .role-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .role-label .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .role-input {
+            width: 100%;
+            background: rgba(197, 194, 159, 0.1);
+            border: 2px solid rgba(197, 194, 159, 0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--brand-green);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        
+        .role-input:focus {
+            outline: none;
+            border-color: var(--brand-terracotta);
+        }
+        
+        .role-input::placeholder {
+            color: rgba(63, 62, 32, 0.4);
+        }
+        
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 16px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        
+        .action-btn.secondary {
+            background: rgba(63, 62, 32, 0.1);
+            color: var(--brand-green);
+            border: 1px solid rgba(63, 62, 32, 0.2);
+        }
+        
+        .action-btn.secondary:hover {
+            background: rgba(63, 62, 32, 0.15);
+        }
+        
+        .action-btn.primary {
+            background: var(--brand-terracotta);
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            background: #a54001;
+        }
+        
+        /* Setup Screen */
+        .setup-screen {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .setup-card {
+            background: var(--bg-warm);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 420px;
+            width: 100%;
+            color: var(--brand-green);
+        }
+        
+        .setup-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .setup-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--brand-sand);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--brand-terracotta);
+        }
+        
+        .start-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--brand-terracotta);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.15s;
+        }
+        
+        .start-btn:hover {
+            background: #a54001;
+            transform: translateY(-2px);
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Results Screen */
+        .results-screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 16px;
+        }
+        
+        .results-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .results-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .results-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .results-card-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .results-play-btn {
+            background: var(--brand-terracotta);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .json-preview {
+            background: rgba(63, 62, 32, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .results-actions {
+            display: flex;
+            gap: 10px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        /* Concepts summary in results */
+        .concepts-summary {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(119, 125, 69, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-concepts);
+        }
+        
+        .concepts-summary-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-concepts);
+            margin-bottom: 4px;
+        }
+        
+        .concepts-summary-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .concepts-summary-item {
+            font-size: 0.8rem;
+            background: rgba(119, 125, 69, 0.15);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        /* Story Overview Screen */
+        .overview-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 16px;
+        }
+        
+        .overview-header {
+            background: var(--brand-green);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            color: #F6F5EB;
+            margin: -16px -16px 16px -16px;
+            width: calc(100% + 32px);
+        }
+        
+        .overview-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+            border: 1px solid rgba(197, 194, 159, 0.3);
+            text-align: center;
+        }
+        
+        .overview-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        
+        .overview-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--brand-green);
+            margin-bottom: 8px;
+        }
+        
+        .overview-subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .overview-audio-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .overview-audio-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--brand-green);
+            opacity: 0.6;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .overview-audio-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--brand-green);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .overview-play-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--brand-green);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(63, 62, 32, 0.25);
+            transition: transform 0.15s;
+            margin: 0 auto 16px auto;
+        }
+        
+        .overview-play-btn:hover { transform: scale(1.05); }
+        .overview-play-btn:active { transform: scale(0.95); }
+        
+        .overview-play-btn .play-icon {
+            width: 0; height: 0;
+            border-left: 26px solid #F6F5EB;
+            border-top: 16px solid transparent;
+            border-bottom: 16px solid transparent;
+            margin-left: 6px;
+        }
+        
+        .overview-play-btn .pause-icon {
+            width: 22px; height: 28px;
+            border-left: 6px solid #F6F5EB;
+            border-right: 6px solid #F6F5EB;
+        }
+        
+        .overview-progress {
+            height: 6px;
+            background: rgba(197, 194, 159, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .overview-progress-fill {
+            height: 100%;
+            background: var(--brand-terracotta);
+            border-radius: 3px;
+            transition: width 0.1s;
+            width: 0%;
+        }
+        
+        .overview-time {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--brand-green);
+            opacity: 0.7;
+        }
+        
+        .overview-listen-count {
+            text-align: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(197, 194, 159, 0.3);
+            font-size: 0.85rem;
+            color: var(--brand-green);
+        }
+        
+        .overview-listen-count strong {
+            color: var(--brand-terracotta);
+        }
+        
+        .questions-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(63, 62, 32, 0.08);
+            border: 1px solid rgba(197, 194, 159, 0.3);
+        }
+        
+        .questions-title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand-green);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .questions-title-icon {
+            font-size: 1.2rem;
+        }
+        
+        .question-item {
+            background: rgba(197, 194, 159, 0.1);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--brand-sand);
+        }
+        
+        .question-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .question-item-number {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--brand-terracotta);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .question-item-text {
+            font-size: 0.95rem;
+            color: var(--brand-green);
+            line-height: 1.4;
+        }
+        
+        .overview-tip {
+            background: rgba(137, 170, 163, 0.15);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-top: 16px;
+            border: 1px solid rgba(137, 170, 163, 0.3);
+        }
+        
+        .overview-tip-icon {
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+        
+        .overview-tip-text {
+            font-size: 0.85rem;
+            color: var(--brand-green);
+            line-height: 1.4;
+        }
+        
+        .overview-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 16px;
+        }
+        
+        .overview-actions .action-btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setupScreen">
+    <div class="setup-card">
+        <div class="setup-title">🎙️ AViTA</div>
+        <div class="setup-subtitle">Aural-Visual Tagging App<br>Language Archive Builder</div>
+        
+        <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-input" id="userName" placeholder="Facilitator name">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Target Language</label>
+            <input type="text" class="form-input" id="userLanguage" placeholder="Language being archived">
+        </div>
+        
+        <button class="start-btn" onclick="startSession()">Begin Tagging →</button>
+    </div>
+</div>
+
+<!-- STORY OVERVIEW SCREEN -->
+<div class="overview-screen hidden" id="overviewScreen">
+    <div class="overview-header">
+        <div class="logo">
+            🎙️ AViTA
+            <span class="logo-badge">v2.0</span>
+        </div>
+        <div style="font-size: 0.85rem; opacity: 0.8;">Step 1: Listen Together</div>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon">👂</div>
+        <div class="overview-title">First, Listen to the Whole Story</div>
+        <div class="overview-subtitle">
+            Before tagging the details, take time to hear the complete story together.<br>
+            Listen as many times as you need. Talk about what you hear.
+        </div>
+    </div>
+    
+    <div class="overview-audio-card">
+        <div class="overview-audio-label">Full Recording</div>
+        <div class="overview-audio-title" id="overviewStoryTitle">Complete Story</div>
+        
+        <button class="overview-play-btn" id="overviewPlayBtn" onclick="toggleOverviewPlay()">
+            <div class="play-icon" id="overviewPlayIcon"></div>
+        </button>
+        
+        <div class="overview-progress">
+            <div class="overview-progress-fill" id="overviewProgressFill"></div>
+        </div>
+        
+        <div class="overview-time" id="overviewTimeDisplay">0:00 / 0:00</div>
+        
+        <div class="overview-listen-count">
+            Times listened: <strong id="listenCount">0</strong>
+        </div>
+    </div>
+    
+    <div class="questions-card">
+        <div class="questions-title">
+            <span class="questions-title-icon">💬</span>
+            Guiding Questions for Discussion
+        </div>
+        
+        <div class="question-item">
+            <div class="question-item-number">Question 1</div>
+            <div class="question-item-text">What is the story about? Can you describe it in one or two sentences?</div>
+        </div>
+        
+        <div class="question-item">
+            <div class="question-item-number">Question 2</div>
+            <div class="question-item-text">Who are the main people or characters? What happens to them?</div>
+        </div>
+        
+        <div class="question-item">
+            <div class="question-item-number">Question 3</div>
+            <div class="question-item-text">Where and when does this story take place?</div>
+        </div>
+        
+        <div class="question-item">
+            <div class="question-item-number">Question 4</div>
+            <div class="question-item-text">How does the story make you feel? What is the mood or emotion?</div>
+        </div>
+        
+        <div class="question-item">
+            <div class="question-item-number">Question 5</div>
+            <div class="question-item-text">What is the main message or point the speaker wants to share?</div>
+        </div>
+        
+        <div class="overview-tip">
+            <span class="overview-tip-icon">💡</span>
+            <span class="overview-tip-text">
+                <strong>Tip:</strong> Don't worry about the exact words yet. Focus on understanding the whole picture first. 
+                You will look at the details in the next step.
+            </span>
+        </div>
+    </div>
+    
+    <div class="overview-actions">
+        <button class="action-btn secondary" onclick="goBackToSetup()">← Back</button>
+        <button class="action-btn primary" onclick="startTagging()">Ready to Tag →</button>
+    </div>
+</div>
+
+<!-- TAGGING SCREEN -->
+<div id="taggingScreen" class="hidden">
+    <header class="header">
+        <div class="logo">
+            🎙️ AViTA
+            <span class="logo-badge">v2.0</span>
+        </div>
+        <div class="segment-nav">
+            <button onclick="prevSegment()" id="prevBtn">◀</button>
+            <span class="segment-info" id="segmentInfo">1 / 10</span>
+            <button onclick="nextSegment()" id="nextBtn">▶</button>
+        </div>
+    </header>
+    
+    <div class="main-content">
+        <!-- Audio Player -->
+        <div class="audio-card">
+            <div class="segment-label">Segment</div>
+            <div class="segment-number" id="segmentNumber">1</div>
+            
+            <div class="audio-controls">
+                <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+                <button class="play-btn" onclick="togglePlay()">
+                    <div class="play-icon" id="playIcon"></div>
+                </button>
+                <button class="speed-btn" id="speedBtn" onclick="toggleSpeed()">1×</button>
+            </div>
+            
+            <!-- Standard waveform (for non-concepts layers) -->
+            <div class="waveform" id="standardWaveform">
+                <div class="waveform-progress" id="waveformProgress"></div>
+            </div>
+        </div>
+        
+        <!-- Layer Progress -->
+        <div class="layer-progress" id="layerProgress"></div>
+        
+        <!-- Question Card -->
+        <div class="question-card" id="questionCard">
+            <div class="question-layer">
+                <span class="layer-badge" id="layerBadge" style="background: var(--brand-terracotta);">Event</span>
+                <span>Layer 1 of 7</span>
+            </div>
+            <div class="question-text" id="questionText">What kind of event is this?</div>
+            <div class="question-hint" id="questionHint">Listen and identify the main action or state</div>
+        </div>
+        
+        <!-- Options Container -->
+        <div class="options-container" id="optionsContainer"></div>
+        
+        <!-- Timeline Container (only visible on Concepts layer) -->
+        <div class="timeline-container hidden" id="timelineContainer">
+            <div class="timeline-label">Select region to tag a concept</div>
+            <div class="timeline-waveform" id="timelineWaveform">
+                <div class="timeline-bars" id="timelineBars"></div>
+                <div class="timeline-playhead" id="timelinePlayhead" style="left: 0%;"></div>
+                <!-- Concept regions will be added here dynamically -->
+            </div>
+            <div class="timeline-markers">
+                <span>0:00</span>
+                <span id="timelineEnd">0:03</span>
+            </div>
+            
+            <!-- Selection info (appears when dragging) -->
+            <div class="selection-info" id="selectionInfo">
+                <div class="selection-times">
+                    Start: <span id="selStartTime">0.00s</span>
+                    End: <span id="selEndTime">0.00s</span>
+                </div>
+                
+                <!-- Type toggle: Lemma vs Morpheme -->
+                <div class="concept-type-toggle">
+                    <button class="type-toggle-btn active" id="toggleLemma" onclick="setConceptType('lemma')">
+                        📦 Lemma (word)
+                    </button>
+                    <button class="type-toggle-btn morpheme" id="toggleMorpheme" onclick="setConceptType('morpheme')">
+                        🔗 Morpheme (affix)
+                    </button>
+                </div>
+                
+                <!-- Morpheme palette (shown when morpheme type selected) -->
+                <div class="morpheme-palette" id="morphemePalette">
+                    <!-- Quantity -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Quantity</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('one')">one</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('two')">two</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('few')">few</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('many')">many</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('all')">all</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('mass')">mass</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('generic')">generic</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Reference Status -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Reference</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('new_mention')">new_mention</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('given')">given</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('inferrable')">inferrable</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Reality -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Reality</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('actual')">actual</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('potential')">potential</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('hypothetical')">hypothetical</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('counterfactual')">counterfactual</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('obligatory')">obligatory</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('desired')">desired</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('feared')">feared</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('commanded')">commanded</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('permitted')">permitted</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Frame -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Time Frame</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('retrospective')">retrospective</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('immediate')">immediate</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('prospective')">prospective</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('gnomic')">gnomic</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Evidentiality -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Evidentiality</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('witnessed_visual')">witnessed_visual</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('witnessed_sensory')">witnessed_sensory</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('reported')">reported</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('inferred')">inferred</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('assumed')">assumed</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('general_knowledge')">general_knowledge</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('divine_revelation')">divine_revelation</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Aspect -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Aspect</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('completed')">completed</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('ongoing')">ongoing</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('habitual')">habitual</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('inchoative')">inchoative</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('cessative')">cessative</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Polarity -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Polarity</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('positive')">positive</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('negative')">negative</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Valency & Derivation (cross-linguistic patterns) -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Valency</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('causative')">causative</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('applicative')">applicative</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('reciprocal')">reciprocal</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('reflexive')">reflexive</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Social/Affect -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Social/Affect</div>
+                        <div class="morpheme-section-btns">
+                            <button class="morpheme-btn" onclick="selectMorpheme('honorific')">honorific</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('diminutive')">diminutive</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('augmentative')">augmentative</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('associative')">associative</button>
+                            <button class="morpheme-btn" onclick="selectMorpheme('distributive')">distributive</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom morpheme input -->
+                    <div class="morpheme-section">
+                        <div class="morpheme-section-label">Custom</div>
+                        <div class="morpheme-custom-row">
+                            <input type="text" class="morpheme-custom-input" id="customMorphemeInput" placeholder="Other morpheme...">
+                            <button class="morpheme-custom-btn" onclick="selectCustomMorpheme()">Use</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="concept-input-row">
+                    <button class="play-selection-btn" id="playSelectionBtn" onclick="togglePlaySelection()" title="Play selection">
+                        <div class="play-sel-icon" id="playSelIcon"></div>
+                    </button>
+                    <div class="concept-input-wrapper">
+                        <input type="text" class="concept-input" id="conceptInput" 
+                               placeholder="Type or select concept..." 
+                               oninput="onConceptInput()"
+                               onfocus="showDictionary()"
+                               autocomplete="off">
+                        <div class="dictionary-dropdown" id="dictionaryDropdown"></div>
+                    </div>
+                    <button class="add-concept-btn" id="addConceptBtn" onclick="addConcept()">+ Add</button>
+                </div>
+                
+                <!-- Sufficiency notice (shows when selecting a known concept) -->
+                <div class="sufficiency-notice" id="sufficiencyNotice">
+                    <span class="notice-icon" id="noticeIcon">✓</span>
+                    <div class="notice-text">
+                        <strong id="noticeTitle">Sufficient examples</strong>
+                        <small id="noticeSubtext">You can skip this instance unless pronunciation differs significantly.</small>
+                    </div>
+                    <button class="skip-btn" onclick="skipInstance()">Skip</button>
+                </div>
+            </div>
+            
+            <!-- Needs attention panel -->
+            <div class="needs-attention-panel" id="needsAttentionPanel" style="display: none;">
+                <div class="needs-attention-header">
+                    <span class="needs-attention-title">
+                        <span>⚠️</span>
+                        <span>Need More Examples</span>
+                    </span>
+                </div>
+                <div class="needs-attention-items" id="needsAttentionItems"></div>
+            </div>
+            
+            <!-- Dictionary panel (shows all concepts found so far) -->
+            <div class="dictionary-panel hidden" id="dictionaryPanel">
+                <div class="dictionary-header">
+                    <span class="dictionary-title">📖 Concept Dictionary</span>
+                    <span class="dictionary-count" id="dictionaryCount">0 concepts</span>
+                </div>
+                <div class="dictionary-entries" id="dictionaryEntries">
+                    <span style="opacity: 0.5; font-size: 0.8rem;">Concepts will appear here as you tag</span>
+                </div>
+            </div>
+            
+            <!-- Quick tags from participants -->
+            <div class="quick-tags" id="quickTags">
+                <div class="quick-tags-label">Quick tag from participants:</div>
+                <div class="quick-tag-btns" id="quickTagBtns"></div>
+            </div>
+            
+            <!-- Concepts list -->
+            <div class="concepts-list" id="conceptsList">
+                <div class="concepts-list-label">Tagged concepts in this segment:</div>
+                <div class="concept-chips" id="conceptChips">
+                    <span style="opacity: 0.5; font-size: 0.85rem;">No concepts tagged yet</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="action-row">
+            <button class="action-btn secondary" onclick="skipLayer()">Skip</button>
+            <button class="action-btn primary" onclick="nextLayer()">Continue →</button>
+        </div>
+    </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="results-screen" id="resultsScreen">
+    <div class="header">
+        <div class="logo">🎙️ AViTA <span class="logo-badge">Results</span></div>
+    </div>
+    
+    <div class="results-content" id="resultsContent"></div>
+    
+    <div class="results-actions">
+        <button class="action-btn secondary" onclick="location.reload()" style="flex: 1;">🔄 New Session</button>
+        <button class="action-btn primary" onclick="downloadArchive()" style="flex: 1;">📥 Download Archive</button>
+    </div>
+</div>
+
+<script>
+// ============ TEST DATA ============
+const TEST_SEGMENTS = [
+    { id: 0, duration: 3, audio_file: "audio/segment_0.mp3" },
+    { id: 1, duration: 3, audio_file: "audio/segment_1.mp3" },
+    { id: 2, duration: 3, audio_file: "audio/segment_2.mp3" },
+    { id: 3, duration: 3, audio_file: "audio/segment_3.mp3" },
+    { id: 4, duration: 3, audio_file: "audio/segment_4.mp3" },
+    { id: 5, duration: 3, audio_file: "audio/segment_5.mp3" },
+    { id: 6, duration: 3, audio_file: "audio/segment_6.mp3" },
+    { id: 7, duration: 3, audio_file: "audio/segment_7.mp3" },
+    { id: 8, duration: 3, audio_file: "audio/segment_8.mp3" },
+    { id: 9, duration: 3, audio_file: "audio/segment_9.mp3" },
+    { id: 10, duration: 3, audio_file: "audio/segment_10.mp3" }
+];
+
+// ============ TRIPOD ONTOLOGY v5.2 LAYERS ============
+const LAYERS = [
+    {
+        id: 'event',
+        name: 'Event',
+        color: '#e67e22',
+        question: "What kind of event is this?",
+        hint: "Listen and identify the main action or state",
+        type: 'single-select',
+        fields: [
+            {
+                id: 'category',
+                label: 'Event Category',
+                options: [
+                    { value: 'STATE', icon: '🔵', label: 'State', sublabel: 'Being, having, existing' },
+                    { value: 'MOTION', icon: '🚶', label: 'Motion', sublabel: 'Going, coming, moving' },
+                    { value: 'ACTION', icon: '⚡', label: 'Action', sublabel: 'Doing, making, changing' },
+                    { value: 'TRANSFER', icon: '🤝', label: 'Transfer', sublabel: 'Giving, receiving' },
+                    { value: 'SPEECH', icon: '💬', label: 'Speech', sublabel: 'Saying, asking, telling' },
+                    { value: 'INTERNAL', icon: '💭', label: 'Internal', sublabel: 'Thinking, feeling, wanting' },
+                    { value: 'PROCESS', icon: '🔄', label: 'Process', sublabel: 'Becoming, growing, changing' },
+                    { value: 'PERCEPTION', icon: '👁️', label: 'Perception', sublabel: 'Seeing, hearing, sensing' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'participants',
+        name: 'Participants',
+        color: '#2ecc71',
+        question: "Who or what is involved?",
+        hint: "Identify the roles – you'll mark their sounds in the Concepts layer",
+        type: 'role-input',
+        fields: [
+            { id: 'initiator', label: 'Initiator', hint: 'Who/what causes or does the action?', color: '#2ecc71' },
+            { id: 'affected', label: 'Affected', hint: 'Who/what is acted upon?', color: '#e74c3c' },
+            { id: 'experiencer', label: 'Experiencer', hint: 'Who perceives or feels?', color: '#9b59b6' },
+            { id: 'location', label: 'Location', hint: 'Where does it happen?', color: '#795548' },
+            { id: 'instrument', label: 'Instrument', hint: 'With what tool or means?', color: '#607d8b' }
+        ]
+    },
+    {
+        id: 'modifiers',
+        name: 'Modifiers',
+        color: '#3498db',
+        question: "What are the circumstances?",
+        hint: "How does the speaker present this event?",
+        type: 'multi-field',
+        fields: [
+            {
+                id: 'reality',
+                label: 'Reality',
+                options: [
+                    { value: 'actual', label: 'Actually happened' },
+                    { value: 'potential', label: 'Could happen' },
+                    { value: 'hypothetical', label: 'Might happen (if...)' },
+                    { value: 'counterfactual', label: 'Contrary to fact' },
+                    { value: 'obligatory', label: 'Required to happen' },
+                    { value: 'desired', label: 'Wished for' },
+                    { value: 'feared', label: 'Dreaded' },
+                    { value: 'commanded', label: 'Ordered to happen' },
+                    { value: 'permitted', label: 'Allowed to happen' }
+                ]
+            },
+            {
+                id: 'time_frame',
+                label: 'Time Frame',
+                options: [
+                    { value: 'retrospective', label: 'Past / Before' },
+                    { value: 'immediate', label: 'Present / Now' },
+                    { value: 'prospective', label: 'Future / After' },
+                    { value: 'gnomic', label: 'Always true' }
+                ]
+            },
+            {
+                id: 'evidentiality',
+                label: 'How does the speaker know?',
+                options: [
+                    { value: 'witnessed_visual', label: 'Saw it directly' },
+                    { value: 'witnessed_sensory', label: 'Heard/felt directly' },
+                    { value: 'reported', label: 'Told by another' },
+                    { value: 'inferred', label: 'Concluded from evidence' },
+                    { value: 'assumed', label: 'Taken for granted' },
+                    { value: 'general_knowledge', label: 'Common knowledge' },
+                    { value: 'divine_revelation', label: 'From God' },
+                    { value: 'unspecified', label: 'Source not indicated' }
+                ]
+            },
+            {
+                id: 'aspect',
+                label: 'Aspect',
+                options: [
+                    { value: 'completed', label: 'Complete / Whole event' },
+                    { value: 'ongoing', label: 'In progress' },
+                    { value: 'habitual', label: 'Regular pattern' },
+                    { value: 'inchoative', label: 'Beginning / Starting' },
+                    { value: 'cessative', label: 'Ending / Stopping' }
+                ]
+            },
+            {
+                id: 'polarity',
+                label: 'Polarity',
+                options: [
+                    { value: 'positive', label: 'Affirmative' },
+                    { value: 'negative', label: 'Negated' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'discourse',
+        name: 'Discourse',
+        color: '#9b59b6',
+        question: "What is this part doing in the story?",
+        hint: "How does this segment function in the narrative?",
+        type: 'multi-field',
+        fields: [
+            {
+                id: 'function',
+                label: 'Discourse Function',
+                options: [
+                    { value: 'SETTING', label: 'Setting the scene' },
+                    { value: 'BACKGROUND', label: 'Background info' },
+                    { value: 'MAIN', label: 'Main storyline' },
+                    { value: 'PEAK', label: 'Climax / Peak moment' },
+                    { value: 'EVALUATION', label: 'Comment / Evaluation' }
+                ]
+            },
+            {
+                id: 'pacing',
+                label: 'Pacing',
+                options: [
+                    { value: 'summary', label: 'Quick summary' },
+                    { value: 'normal', label: 'Normal pace' },
+                    { value: 'slow', label: 'Slow / Detailed' },
+                    { value: 'pause', label: 'Pause / Reflection' }
+                ]
+            },
+            {
+                id: 'prominence',
+                label: 'Prominence',
+                options: [
+                    { value: 'low', label: 'Low - Background' },
+                    { value: 'medium', label: 'Medium - Normal' },
+                    { value: 'high', label: 'High - Important' },
+                    { value: 'peak', label: 'Peak - Climactic' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'pragmatics',
+        name: 'Pragmatics',
+        color: '#1abc9c',
+        question: "What is the social context?",
+        hint: "Register and relationship between speaker/listener",
+        type: 'multi-field',
+        fields: [
+            {
+                id: 'register',
+                label: 'Register / Style',
+                options: [
+                    { value: 'informal', label: 'Casual / Informal' },
+                    { value: 'narrative', label: 'Storytelling' },
+                    { value: 'formal', label: 'Formal / Official' },
+                    { value: 'elder_speech', label: 'Elder / Authority' },
+                    { value: 'dialogue', label: 'Direct dialogue' }
+                ]
+            },
+            {
+                id: 'social_axis',
+                label: 'Social Relationship',
+                options: [
+                    { value: 'equal_to_equal', label: 'Equal to equal' },
+                    { value: 'superior_to_inferior', label: 'Higher to lower' },
+                    { value: 'inferior_to_superior', label: 'Lower to higher' },
+                    { value: 'divine_to_human', label: 'Divine to human' },
+                    { value: 'human_to_divine', label: 'Human to divine' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 'emotion',
+        name: 'Emotion',
+        color: '#e74c3c',
+        question: "What is the emotional tone?",
+        hint: "How does this segment feel?",
+        type: 'multi-field',
+        fields: [
+            {
+                id: 'type',
+                label: 'Emotion Type',
+                options: [
+                    { value: 'neutral', label: 'Neutral' },
+                    { value: 'joy', label: 'Joy / Happiness' },
+                    { value: 'sorrow', label: 'Sorrow / Sadness' },
+                    { value: 'fear', label: 'Fear' },
+                    { value: 'anger', label: 'Anger' },
+                    { value: 'anticipation', label: 'Anticipation' },
+                    { value: 'surprise', label: 'Surprise' },
+                    { value: 'trust', label: 'Trust' },
+                    { value: 'awe', label: 'Awe / Wonder' }
+                ]
+            },
+            {
+                id: 'intensity',
+                label: 'Intensity',
+                options: [
+                    { value: 'low', label: 'Low / Mild' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'high', label: 'High / Strong' },
+                    { value: 'extreme', label: 'Extreme' }
+                ]
+            },
+            {
+                id: 'narrator_stance',
+                label: 'Narrator Stance',
+                options: [
+                    { value: 'neutral', label: 'Neutral' },
+                    { value: 'sympathetic', label: 'Sympathetic' },
+                    { value: 'critical', label: 'Critical' },
+                    { value: 'suspenseful', label: 'Suspenseful' },
+                    { value: 'celebratory', label: 'Celebratory' }
+                ]
+            }
+        ]
+    },
+    // ============ NEW CONCEPTS LAYER ============
+    {
+        id: 'concepts',
+        name: 'Concepts',
+        color: '#f1c40f',
+        question: "Where are the key words spoken?",
+        hint: "Select regions on the timeline and label each concept",
+        type: 'timeline-tagging'
+    }
+];
+
+// ============ STATE ============
+let segments = TEST_SEGMENTS;
+let currentSegIdx = 0;
+let currentLayerIdx = 0;
+let currentData = {};
+let annotations = {};
+
+let audio = new Audio();
+let isPlaying = false;
+let playbackSpeed = 1;
+
+// Timeline selection state
+let isSelecting = false;
+let selectionStart = null;
+let selectionEnd = null;
+let currentSelection = null;
+let isPlayingSelection = false;
+let selectionPlaybackInterval = null;
+
+// Concept type state
+let currentConceptType = 'lemma'; // 'lemma' or 'morpheme'
+
+// Sufficiency thresholds
+const SUFFICIENCY_THRESHOLDS = {
+    lemma: { minimum: 3, ideal: 8 },
+    morpheme: { minimum: 15, ideal: 30 }  // Morphemes need more examples across different roots
+};
+
+// Global concept dictionary (persists across segments)
+let conceptDictionary = {
+    lemmas: {},      // { "hunter": { count: 3, segments: [0, 2, 5], contexts: ["narrative", "dialogue"] } }
+    morphemes: {}    // { "PLURAL": { count: 5, roots: ["hunter", "lion", "tree"], segments: [1, 3, 4, 6, 7] } }
+};
+
+// Track which concepts need more examples
+function getConceptStatus(label, type) {
+    const dict = type === 'morpheme' ? conceptDictionary.morphemes : conceptDictionary.lemmas;
+    const thresholds = type === 'morpheme' ? SUFFICIENCY_THRESHOLDS.morpheme : SUFFICIENCY_THRESHOLDS.lemma;
+    
+    const entry = dict[label];
+    if (!entry) {
+        return { status: 'not-tagged', count: 0, minimum: thresholds.minimum, ideal: thresholds.ideal };
+    }
+    
+    const count = entry.count;
+    if (count >= thresholds.ideal) {
+        return { status: 'sufficient', count, minimum: thresholds.minimum, ideal: thresholds.ideal };
+    } else if (count >= thresholds.minimum) {
+        return { status: 'sufficient', count, minimum: thresholds.minimum, ideal: thresholds.ideal, note: 'More examples would help' };
+    } else {
+        return { status: 'needs-more', count, minimum: thresholds.minimum, ideal: thresholds.ideal, needed: thresholds.minimum - count };
+    }
+}
+
+function getMorphemeVariation(label) {
+    const entry = conceptDictionary.morphemes[label];
+    if (!entry) return { roots: 0, needed: 5 };
+    
+    const uniqueRoots = entry.roots ? entry.roots.length : 0;
+    return { 
+        roots: uniqueRoots, 
+        needed: Math.max(0, 5 - uniqueRoots),
+        sufficient: uniqueRoots >= 5
+    };
+}
+
+// ============ INIT ============
+let overviewAudio = new Audio();
+let overviewIsPlaying = false;
+let listenCount = 0;
+
+function startSession() {
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('overviewScreen').classList.remove('hidden');
+    document.getElementById('overviewScreen').style.display = 'flex';
+    
+    // Initialize overview audio (full story recording)
+    overviewAudio.src = 'audio/full_story.mp3';
+    
+    // Setup overview audio events
+    overviewAudio.ontimeupdate = updateOverviewProgress;
+    overviewAudio.onended = onOverviewEnded;
+}
+
+function toggleOverviewPlay() {
+    if (overviewIsPlaying) {
+        overviewAudio.pause();
+        overviewIsPlaying = false;
+    } else {
+        overviewAudio.play().catch(err => {
+            console.log('Audio not available for playback');
+        });
+        overviewIsPlaying = true;
+    }
+    updateOverviewPlayIcon();
+}
+
+function updateOverviewPlayIcon() {
+    const icon = document.getElementById('overviewPlayIcon');
+    icon.className = overviewIsPlaying ? 'pause-icon' : 'play-icon';
+}
+
+function updateOverviewProgress() {
+    const time = overviewAudio.currentTime;
+    const duration = overviewAudio.duration || 0;
+    
+    if (duration > 0) {
+        const progress = (time / duration) * 100;
+        document.getElementById('overviewProgressFill').style.width = progress + '%';
+        document.getElementById('overviewTimeDisplay').textContent = 
+            formatTime(time) + ' / ' + formatTime(duration);
+    }
+}
+
+function onOverviewEnded() {
+    overviewIsPlaying = false;
+    updateOverviewPlayIcon();
+    listenCount++;
+    document.getElementById('listenCount').textContent = listenCount;
+    document.getElementById('overviewProgressFill').style.width = '0%';
+}
+
+function goBackToSetup() {
+    overviewAudio.pause();
+    overviewIsPlaying = false;
+    document.getElementById('overviewScreen').classList.add('hidden');
+    document.getElementById('overviewScreen').style.display = 'none';
+    document.getElementById('setupScreen').classList.remove('hidden');
+}
+
+function startTagging() {
+    overviewAudio.pause();
+    overviewIsPlaying = false;
+    document.getElementById('overviewScreen').classList.add('hidden');
+    document.getElementById('overviewScreen').style.display = 'none';
+    document.getElementById('taggingScreen').classList.remove('hidden');
+    
+    initWaveform();
+    initTimeline();
+    loadSegment(0);
+}
+
+function initWaveform() {
+    const container = document.getElementById('standardWaveform');
+    const barCount = 50;
+    let barsHtml = '<div class="waveform-progress" id="waveformProgress"></div>';
+    
+    for (let i = 0; i < barCount; i++) {
+        const h = 20 + Math.random() * 60;
+        barsHtml += `<div class="waveform-bar" style="height: ${h}%;"></div>`;
+    }
+    container.innerHTML = barsHtml;
+}
+
+function initTimeline() {
+    const container = document.getElementById('timelineBars');
+    const barCount = 80;
+    let barsHtml = '';
+    
+    for (let i = 0; i < barCount; i++) {
+        const h = 15 + Math.random() * 70;
+        barsHtml += `<div class="timeline-bar" style="height: ${h}%;"></div>`;
+    }
+    container.innerHTML = barsHtml;
+    
+    // Setup timeline interaction
+    const timeline = document.getElementById('timelineWaveform');
+    
+    timeline.addEventListener('mousedown', handleTimelineMouseDown);
+    timeline.addEventListener('mousemove', handleTimelineMouseMove);
+    timeline.addEventListener('mouseup', handleTimelineMouseUp);
+    timeline.addEventListener('mouseleave', handleTimelineMouseUp);
+    
+    // Touch events for mobile
+    timeline.addEventListener('touchstart', handleTimelineTouchStart);
+    timeline.addEventListener('touchmove', handleTimelineTouchMove);
+    timeline.addEventListener('touchend', handleTimelineTouchEnd);
+}
+
+// ============ TIMELINE INTERACTION ============
+function getTimelinePosition(e, timeline) {
+    const rect = timeline.getBoundingClientRect();
+    let clientX;
+    
+    if (e.touches) {
+        clientX = e.touches[0].clientX;
+    } else {
+        clientX = e.clientX;
+    }
+    
+    const x = clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, x / rect.width));
+    return percent;
+}
+
+function handleTimelineMouseDown(e) {
+    if (e.target.closest('.concept-region')) return;
+    
+    const timeline = document.getElementById('timelineWaveform');
+    timeline.classList.add('selecting');
+    isSelecting = true;
+    
+    const percent = getTimelinePosition(e, timeline);
+    selectionStart = percent;
+    selectionEnd = percent;
+    
+    updateSelectionDisplay();
+}
+
+function handleTimelineMouseMove(e) {
+    if (!isSelecting) return;
+    
+    const timeline = document.getElementById('timelineWaveform');
+    const percent = getTimelinePosition(e, timeline);
+    selectionEnd = percent;
+    
+    updateSelectionDisplay();
+}
+
+function handleTimelineMouseUp(e) {
+    if (!isSelecting) return;
+    
+    const timeline = document.getElementById('timelineWaveform');
+    timeline.classList.remove('selecting');
+    isSelecting = false;
+    
+    // Ensure start < end
+    if (selectionStart > selectionEnd) {
+        [selectionStart, selectionEnd] = [selectionEnd, selectionStart];
+    }
+    
+    // Minimum selection size
+    if (selectionEnd - selectionStart < 0.02) {
+        clearSelection();
+        return;
+    }
+    
+    showSelectionInfo();
+}
+
+// Touch handlers
+function handleTimelineTouchStart(e) {
+    e.preventDefault();
+    handleTimelineMouseDown(e);
+}
+
+function handleTimelineTouchMove(e) {
+    e.preventDefault();
+    handleTimelineMouseMove(e);
+}
+
+function handleTimelineTouchEnd(e) {
+    handleTimelineMouseUp(e);
+}
+
+function updateSelectionDisplay() {
+    // Remove existing selection element
+    const existing = document.getElementById('currentSelection');
+    if (existing) existing.remove();
+    
+    if (selectionStart === null || selectionEnd === null) return;
+    
+    const left = Math.min(selectionStart, selectionEnd) * 100;
+    const width = Math.abs(selectionEnd - selectionStart) * 100;
+    
+    const selDiv = document.createElement('div');
+    selDiv.id = 'currentSelection';
+    selDiv.className = 'timeline-selection active';
+    selDiv.style.left = left + '%';
+    selDiv.style.width = width + '%';
+    
+    document.getElementById('timelineWaveform').appendChild(selDiv);
+    
+    // Update time displays
+    const duration = segments[currentSegIdx].duration;
+    const startTime = Math.min(selectionStart, selectionEnd) * duration;
+    const endTime = Math.max(selectionStart, selectionEnd) * duration;
+    
+    document.getElementById('selStartTime').textContent = startTime.toFixed(2) + 's';
+    document.getElementById('selEndTime').textContent = endTime.toFixed(2) + 's';
+}
+
+function showSelectionInfo() {
+    document.getElementById('selectionInfo').classList.add('visible');
+    document.getElementById('conceptInput').focus();
+}
+
+function clearSelection() {
+    selectionStart = null;
+    selectionEnd = null;
+    
+    // Stop any playing selection
+    stopSelectionPlayback();
+    
+    const existing = document.getElementById('currentSelection');
+    if (existing) existing.remove();
+    
+    document.getElementById('selectionInfo').classList.remove('visible');
+    document.getElementById('conceptInput').value = '';
+    
+    // Reset morpheme button selection
+    document.querySelectorAll('.morpheme-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    // Hide dictionary dropdown
+    hideDictionary();
+}
+
+// ============ CONCEPT MANAGEMENT ============
+function setConceptType(type) {
+    currentConceptType = type;
+    
+    document.getElementById('toggleLemma').classList.toggle('active', type === 'lemma');
+    document.getElementById('toggleMorpheme').classList.toggle('active', type === 'morpheme');
+    document.getElementById('morphemePalette').classList.toggle('visible', type === 'morpheme');
+    
+    // Update placeholder
+    const input = document.getElementById('conceptInput');
+    if (type === 'lemma') {
+        input.placeholder = 'Type or select concept...';
+    } else {
+        input.placeholder = 'Select morpheme from palette above...';
+    }
+}
+
+function selectMorpheme(morpheme) {
+    document.getElementById('conceptInput').value = morpheme;
+    
+    // Highlight selected button
+    document.querySelectorAll('.morpheme-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.textContent === morpheme);
+    });
+    
+    // Check sufficiency
+    checkAndShowSufficiency(morpheme);
+}
+
+function selectCustomMorpheme() {
+    const input = document.getElementById('customMorphemeInput');
+    const morpheme = input.value.trim().toLowerCase().replace(/\s+/g, '_');
+    
+    if (morpheme) {
+        document.getElementById('conceptInput').value = morpheme;
+        input.value = '';
+        checkAndShowSufficiency(morpheme);
+    }
+}
+
+function addConcept() {
+    const input = document.getElementById('conceptInput');
+    const label = input.value.trim();
+    
+    if (!label || selectionStart === null || selectionEnd === null) return;
+    
+    const duration = segments[currentSegIdx].duration;
+    const startMs = Math.round(Math.min(selectionStart, selectionEnd) * duration * 1000);
+    const endMs = Math.round(Math.max(selectionStart, selectionEnd) * duration * 1000);
+    
+    if (!currentData.concepts) currentData.concepts = [];
+    
+    // Check if this is a morpheme being added to a lemma (for variation tracking)
+    let associatedLemma = null;
+    if (currentConceptType === 'morpheme') {
+        // Find if there's a lemma that overlaps with this morpheme region
+        const overlappingLemma = currentData.concepts.find(c => 
+            c.type === 'lemma' && 
+            ((startMs >= c.start_ms && startMs <= c.end_ms) || 
+             (endMs >= c.start_ms && endMs <= c.end_ms) ||
+             (startMs <= c.start_ms && endMs >= c.end_ms))
+        );
+        if (overlappingLemma) {
+            associatedLemma = overlappingLemma.label;
+        }
+    }
+    
+    // Add to segment data
+    const conceptEntry = {
+        label: label,
+        start_ms: startMs,
+        end_ms: endMs,
+        type: currentConceptType
+    };
+    
+    if (associatedLemma) {
+        conceptEntry.associated_lemma = associatedLemma;
+    }
+    
+    currentData.concepts.push(conceptEntry);
+    
+    // Update dictionary with enhanced tracking
+    if (currentConceptType === 'lemma') {
+        if (!conceptDictionary.lemmas[label]) {
+            conceptDictionary.lemmas[label] = { count: 0, segments: [], contexts: [] };
+        }
+        conceptDictionary.lemmas[label].count++;
+        if (!conceptDictionary.lemmas[label].segments.includes(currentSegIdx)) {
+            conceptDictionary.lemmas[label].segments.push(currentSegIdx);
+        }
+        // Track context from discourse function if available
+        const discourseFunc = currentData.discourse?.function;
+        if (discourseFunc && !conceptDictionary.lemmas[label].contexts.includes(discourseFunc)) {
+            conceptDictionary.lemmas[label].contexts.push(discourseFunc);
+        }
+    } else {
+        if (!conceptDictionary.morphemes[label]) {
+            conceptDictionary.morphemes[label] = { count: 0, roots: [], segments: [] };
+        }
+        conceptDictionary.morphemes[label].count++;
+        if (!conceptDictionary.morphemes[label].segments.includes(currentSegIdx)) {
+            conceptDictionary.morphemes[label].segments.push(currentSegIdx);
+        }
+        // Track which roots this morpheme has been tagged with
+        if (associatedLemma && !conceptDictionary.morphemes[label].roots.includes(associatedLemma)) {
+            conceptDictionary.morphemes[label].roots.push(associatedLemma);
+        }
+    }
+    
+    // Clear morpheme selection
+    document.querySelectorAll('.morpheme-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    clearSelection();
+    renderConceptRegions();
+    renderConceptChips();
+    renderDictionaryPanel();
+    renderNeedsAttentionPanel();
+    hideDictionary();
+    hideSufficiencyNotice();
+}
+
+function onConceptInput() {
+    const input = document.getElementById('conceptInput');
+    const query = input.value.trim().toLowerCase();
+    
+    renderDictionaryDropdown(query);
+    checkAndShowSufficiency(input.value.trim());
+}
+
+function checkAndShowSufficiency(label) {
+    if (!label) {
+        hideSufficiencyNotice();
+        return;
+    }
+    
+    const status = getConceptStatus(label, currentConceptType);
+    
+    if (status.status === 'not-tagged') {
+        hideSufficiencyNotice();
+        return;
+    }
+    
+    showSufficiencyNotice(label, status);
+}
+
+function showSufficiencyNotice(label, status) {
+    const notice = document.getElementById('sufficiencyNotice');
+    const icon = document.getElementById('noticeIcon');
+    const title = document.getElementById('noticeTitle');
+    const subtext = document.getElementById('noticeSubtext');
+    
+    notice.classList.remove('sufficient', 'needs-more');
+    
+    if (status.status === 'sufficient') {
+        notice.classList.add('sufficient');
+        icon.textContent = '✓';
+        title.textContent = `"${label}" has ${status.count} examples`;
+        
+        if (status.count >= status.ideal) {
+            subtext.textContent = 'Fully sufficient. Skip unless pronunciation is notably different.';
+        } else {
+            subtext.textContent = `Good coverage (${status.count}/${status.ideal}). You can skip or add more variation.`;
+        }
+    } else {
+        notice.classList.add('needs-more');
+        icon.textContent = '⚠';
+        title.textContent = `"${label}" needs ${status.needed} more example${status.needed > 1 ? 's' : ''}`;
+        subtext.textContent = `Currently ${status.count}/${status.minimum} minimum. Please tag this instance.`;
+    }
+    
+    // For morphemes, add variation info
+    if (currentConceptType === 'morpheme') {
+        const variation = getMorphemeVariation(label);
+        if (!variation.sufficient) {
+            subtext.textContent += ` (${variation.roots} unique roots, need ${variation.needed} more)`;
+        }
+    }
+    
+    notice.classList.add('visible');
+}
+
+function hideSufficiencyNotice() {
+    document.getElementById('sufficiencyNotice').classList.remove('visible');
+}
+
+function skipInstance() {
+    // Just clear the selection without adding to dictionary
+    clearSelection();
+    hideSufficiencyNotice();
+}
+
+function showDictionary() {
+    const input = document.getElementById('conceptInput');
+    renderDictionaryDropdown(input.value.trim().toLowerCase());
+}
+
+function hideDictionary() {
+    document.getElementById('dictionaryDropdown').classList.remove('visible');
+}
+
+function renderDictionaryDropdown(query) {
+    const dropdown = document.getElementById('dictionaryDropdown');
+    
+    // Get entries based on current type
+    let entries;
+    if (currentConceptType === 'lemma') {
+        entries = Object.entries(conceptDictionary.lemmas).map(([label, data]) => [label, data.count]);
+    } else {
+        entries = Object.entries(conceptDictionary.morphemes).map(([label, data]) => [label, data.count]);
+    }
+    
+    // Filter by query
+    if (query) {
+        entries = entries.filter(([label]) => label.toLowerCase().includes(query));
+    }
+    
+    // Sort by frequency
+    entries.sort((a, b) => b[1] - a[1]);
+    
+    // Add "new" option if query doesn't match existing
+    const exactMatch = entries.some(([label]) => label.toLowerCase() === query);
+    
+    if (entries.length === 0 && !query) {
+        dropdown.classList.remove('visible');
+        return;
+    }
+    
+    let html = '';
+    
+    // Show matches with sufficiency status
+    entries.slice(0, 8).forEach(([label, count]) => {
+        const status = getConceptStatus(label, currentConceptType);
+        const statusIcon = status.status === 'sufficient' ? '✓' : '⚠';
+        const statusClass = status.status;
+        
+        html += `
+            <div class="dictionary-item" onclick="selectFromDictionary('${label}')">
+                <span class="label">${label}</span>
+                <span class="count">
+                    <span class="sufficiency-badge ${statusClass}">${statusIcon} ${count}</span>
+                </span>
+            </div>
+        `;
+    });
+    
+    // Show "add new" option
+    if (query && !exactMatch) {
+        html += `
+            <div class="dictionary-item" onclick="selectFromDictionary('${query}')">
+                <span class="label">${query}</span>
+                <span class="new-badge">+ add new</span>
+            </div>
+        `;
+    }
+    
+    if (html) {
+        dropdown.innerHTML = html;
+        dropdown.classList.add('visible');
+    } else {
+        dropdown.classList.remove('visible');
+    }
+}
+
+function selectFromDictionary(label) {
+    document.getElementById('conceptInput').value = label;
+    hideDictionary();
+    checkAndShowSufficiency(label);
+}
+
+function renderDictionaryPanel() {
+    const lemmaEntries = Object.entries(conceptDictionary.lemmas);
+    const morphemeEntries = Object.entries(conceptDictionary.morphemes);
+    const totalCount = lemmaEntries.length + morphemeEntries.length;
+    
+    document.getElementById('dictionaryCount').textContent = 
+        `${totalCount} concept${totalCount !== 1 ? 's' : ''}`;
+    
+    const container = document.getElementById('dictionaryEntries');
+    
+    if (totalCount === 0) {
+        container.innerHTML = '<span style="opacity: 0.5; font-size: 0.8rem;">Concepts will appear here as you tag</span>';
+        return;
+    }
+    
+    // Sort both by count
+    lemmaEntries.sort((a, b) => b[1].count - a[1].count);
+    morphemeEntries.sort((a, b) => b[1].count - a[1].count);
+    
+    let html = '';
+    
+    lemmaEntries.forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'lemma');
+        const statusClass = status.status;
+        const statusIcon = status.status === 'sufficient' ? '✓' : (status.status === 'needs-more' ? '⚠' : '');
+        
+        html += `
+            <div class="dictionary-entry ${statusClass}">
+                <span>${label}</span>
+                <span class="entry-count">${data.count}</span>
+                ${statusIcon ? `<span class="entry-status">${statusIcon}</span>` : ''}
+            </div>
+        `;
+    });
+    
+    morphemeEntries.forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'morpheme');
+        const variation = getMorphemeVariation(label);
+        const statusClass = status.status;
+        const statusIcon = status.status === 'sufficient' ? '✓' : '⚠';
+        
+        html += `
+            <div class="dictionary-entry morpheme ${statusClass}">
+                <span>${label}</span>
+                <span class="entry-count">${data.count}</span>
+                <span class="entry-status" title="${variation.roots} unique roots">${statusIcon} (${variation.roots}r)</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderNeedsAttentionPanel() {
+    const panel = document.getElementById('needsAttentionPanel');
+    const container = document.getElementById('needsAttentionItems');
+    
+    // Collect items that need more examples
+    const needsAttention = [];
+    
+    Object.entries(conceptDictionary.lemmas).forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'lemma');
+        if (status.status === 'needs-more') {
+            needsAttention.push({
+                label,
+                type: 'lemma',
+                count: data.count,
+                needed: status.needed
+            });
+        }
+    });
+    
+    Object.entries(conceptDictionary.morphemes).forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'morpheme');
+        const variation = getMorphemeVariation(label);
+        if (status.status === 'needs-more' || !variation.sufficient) {
+            needsAttention.push({
+                label,
+                type: 'morpheme',
+                count: data.count,
+                needed: status.needed || 0,
+                roots: variation.roots,
+                rootsNeeded: variation.needed
+            });
+        }
+    });
+    
+    if (needsAttention.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+    
+    panel.style.display = 'block';
+    
+    // Sort by most needed first
+    needsAttention.sort((a, b) => (b.needed || 0) - (a.needed || 0));
+    
+    container.innerHTML = needsAttention.slice(0, 10).map(item => {
+        if (item.type === 'morpheme') {
+            return `
+                <div class="needs-attention-item">
+                    <span>🔗 ${item.label}</span>
+                    <span class="item-count">${item.count}</span>
+                    <span class="item-need">need ${item.needed > 0 ? item.needed + ' more' : ''}${item.rootsNeeded > 0 ? ` +${item.rootsNeeded} roots` : ''}</span>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="needs-attention-item">
+                    <span>${item.label}</span>
+                    <span class="item-count">${item.count}</span>
+                    <span class="item-need">need ${item.needed} more</span>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
+function addConceptFromQuickTag(label) {
+    if (selectionStart === null || selectionEnd === null) {
+        alert('Please select a region on the timeline first');
+        return;
+    }
+    
+    document.getElementById('conceptInput').value = label;
+    setConceptType('lemma'); // Quick tags are always lemmas
+    addConcept();
+}
+
+function removeConcept(index) {
+    if (currentData.concepts) {
+        const removed = currentData.concepts[index];
+        
+        // Update dictionary count
+        if (removed.type === 'morpheme') {
+            if (conceptDictionary.morphemes[removed.label]) {
+                conceptDictionary.morphemes[removed.label].count--;
+                if (conceptDictionary.morphemes[removed.label].count <= 0) {
+                    delete conceptDictionary.morphemes[removed.label];
+                }
+            }
+        } else {
+            if (conceptDictionary.lemmas[removed.label]) {
+                conceptDictionary.lemmas[removed.label].count--;
+                if (conceptDictionary.lemmas[removed.label].count <= 0) {
+                    delete conceptDictionary.lemmas[removed.label];
+                }
+            }
+        }
+        
+        currentData.concepts.splice(index, 1);
+        renderConceptRegions();
+        renderConceptChips();
+        renderDictionaryPanel();
+        renderNeedsAttentionPanel();
+    }
+}
+
+function renderConceptRegions() {
+    // Remove existing regions
+    document.querySelectorAll('.concept-region').forEach(el => el.remove());
+    
+    if (!currentData.concepts) return;
+    
+    const duration = segments[currentSegIdx].duration;
+    const timeline = document.getElementById('timelineWaveform');
+    
+    currentData.concepts.forEach((concept, idx) => {
+        const leftPercent = (concept.start_ms / 1000 / duration) * 100;
+        const widthPercent = ((concept.end_ms - concept.start_ms) / 1000 / duration) * 100;
+        
+        const isMorpheme = concept.type === 'morpheme';
+        
+        const region = document.createElement('div');
+        region.className = 'concept-region';
+        region.style.left = leftPercent + '%';
+        region.style.width = widthPercent + '%';
+        
+        // Style differently for morphemes
+        if (isMorpheme) {
+            region.style.background = 'rgba(233, 30, 99, 0.25)';
+            region.style.borderColor = '#e91e63';
+            region.style.color = '#e91e63';
+        }
+        
+        region.innerHTML = `
+            ${concept.label}
+            <button class="delete-btn" onclick="removeConcept(${idx})">×</button>
+        `;
+        region.onclick = (e) => {
+            if (!e.target.classList.contains('delete-btn')) {
+                playRegion(concept.start_ms, concept.end_ms);
+            }
+        };
+        
+        timeline.appendChild(region);
+    });
+}
+
+function renderConceptChips() {
+    const container = document.getElementById('conceptChips');
+    
+    if (!currentData.concepts || currentData.concepts.length === 0) {
+        container.innerHTML = '<span style="opacity: 0.5; font-size: 0.85rem;">No concepts tagged yet</span>';
+        return;
+    }
+    
+    container.innerHTML = currentData.concepts.map((concept, idx) => {
+        const isMorpheme = concept.type === 'morpheme';
+        const bgColor = isMorpheme ? 'rgba(233, 30, 99, 0.15)' : 'rgba(241, 196, 15, 0.15)';
+        const borderColor = isMorpheme ? '#e91e63' : 'var(--color-concepts)';
+        const textColor = isMorpheme ? '#e91e63' : 'var(--color-concepts)';
+        
+        return `
+            <div class="concept-chip" style="background: ${bgColor}; border-color: ${borderColor}; color: ${textColor};" 
+                 onclick="playRegion(${concept.start_ms}, ${concept.end_ms})">
+                <span>${isMorpheme ? '🔗 ' : ''}${concept.label}</span>
+                <span class="time-range">${(concept.start_ms/1000).toFixed(2)}s - ${(concept.end_ms/1000).toFixed(2)}s</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); removeConcept(${idx})">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function playRegion(startMs, endMs) {
+    const startSec = startMs / 1000;
+    const endSec = endMs / 1000;
+    const segmentDuration = segments[currentSegIdx].duration;
+    
+    // Check if audio is actually loaded
+    if (!audio.src || audio.readyState < 2) {
+        // No audio - simulate playback
+        simulateSelectionPlayback(startSec, endSec, segmentDuration);
+        return;
+    }
+    
+    audio.currentTime = startSec;
+    audio.play().catch(() => {
+        // Fallback to simulation
+        simulateSelectionPlayback(startSec, endSec, segmentDuration);
+    });
+    
+    // Stop at end of region
+    const checkEnd = setInterval(() => {
+        if (audio.currentTime >= endSec) {
+            audio.pause();
+            clearInterval(checkEnd);
+        }
+    }, 30);
+}
+
+function togglePlaySelection() {
+    if (selectionStart === null || selectionEnd === null) return;
+    
+    // Get segment duration (the audio file might not exist in demo mode)
+    const segmentDuration = segments[currentSegIdx].duration;
+    
+    // selectionStart and selectionEnd are percentages (0-1)
+    const startSec = Math.min(selectionStart, selectionEnd) * segmentDuration;
+    const endSec = Math.max(selectionStart, selectionEnd) * segmentDuration;
+    
+    if (isPlayingSelection) {
+        // Stop playback
+        audio.pause();
+        stopSelectionPlayback();
+    } else {
+        // Clear any existing interval first
+        if (selectionPlaybackInterval) {
+            clearInterval(selectionPlaybackInterval);
+        }
+        
+        // Start playback at selection start
+        isPlayingSelection = true;
+        updatePlaySelectionIcon();
+        
+        // Check if audio is actually loaded
+        if (!audio.src || audio.readyState < 2) {
+            // No audio loaded - simulate playback visually for demo
+            simulateSelectionPlayback(startSec, endSec, segmentDuration);
+            return;
+        }
+        
+        audio.currentTime = startSec;
+        
+        // Set up stop point BEFORE playing
+        selectionPlaybackInterval = setInterval(() => {
+            if (audio.currentTime >= endSec) {
+                audio.pause();
+                audio.currentTime = startSec; // Reset to start of selection
+                stopSelectionPlayback();
+            } else if (audio.paused && isPlayingSelection) {
+                // Audio ended or was paused externally
+                stopSelectionPlayback();
+            }
+        }, 20); // Check frequently for precision
+        
+        audio.play().catch(() => {
+            // Audio failed to play - try simulation instead
+            stopSelectionPlayback();
+            simulateSelectionPlayback(startSec, endSec, segmentDuration);
+        });
+    }
+}
+
+function simulateSelectionPlayback(startSec, endSec, totalDuration) {
+    // Visual simulation when no actual audio is available
+    isPlayingSelection = true;
+    updatePlaySelectionIcon();
+    
+    const durationMs = (endSec - startSec) * 1000;
+    const startPercent = (startSec / totalDuration) * 100;
+    const endPercent = (endSec / totalDuration) * 100;
+    
+    // Animate playhead through selection
+    const playhead = document.getElementById('timelinePlayhead');
+    const startTime = Date.now();
+    
+    selectionPlaybackInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        const currentPercent = startPercent + (endPercent - startPercent) * progress;
+        
+        playhead.style.left = currentPercent + '%';
+        
+        // Update time display
+        const currentTime = startSec + (endSec - startSec) * progress;
+        document.getElementById('timeDisplay').textContent = 
+            formatTime(currentTime) + ' / ' + formatTime(totalDuration);
+        
+        if (progress >= 1) {
+            stopSelectionPlayback();
+            playhead.style.left = startPercent + '%';
+        }
+    }, 30);
+}
+
+function stopSelectionPlayback() {
+    isPlayingSelection = false;
+    if (selectionPlaybackInterval) {
+        clearInterval(selectionPlaybackInterval);
+        selectionPlaybackInterval = null;
+    }
+    updatePlaySelectionIcon();
+}
+
+function updatePlaySelectionIcon() {
+    const btn = document.getElementById('playSelectionBtn');
+    const icon = document.getElementById('playSelIcon');
+    
+    if (isPlayingSelection) {
+        btn.classList.add('playing');
+        icon.className = 'stop-sel-icon';
+    } else {
+        btn.classList.remove('playing');
+        icon.className = 'play-sel-icon';
+    }
+}
+
+function renderQuickTags() {
+    const container = document.getElementById('quickTagBtns');
+    const participants = currentData.participants || {};
+    
+    const values = Object.values(participants).filter(v => v && v.trim());
+    
+    if (values.length === 0) {
+        container.innerHTML = '<span style="opacity: 0.5; font-size: 0.8rem;">Tag participants in layer 2 first</span>';
+        return;
+    }
+    
+    container.innerHTML = values.map(val => `
+        <button class="quick-tag-btn" onclick="addConceptFromQuickTag('${val}')">${val}</button>
+    `).join('');
+}
+
+// ============ SEGMENT & LAYER LOADING ============
+function loadSegment(idx) {
+    currentSegIdx = idx;
+    currentLayerIdx = 0;
+    
+    // Load or initialize segment data
+    const segId = segments[idx].id;
+    if (annotations[segId]) {
+        currentData = JSON.parse(JSON.stringify(annotations[segId]));
+    } else {
+        currentData = {};
+    }
+    
+    // Update UI
+    document.getElementById('segmentNumber').textContent = idx + 1;
+    document.getElementById('segmentInfo').textContent = `${idx + 1} / ${segments.length}`;
+    document.getElementById('prevBtn').disabled = idx === 0;
+    document.getElementById('nextBtn').disabled = idx === segments.length - 1;
+    
+    // Load audio
+    audio.src = segments[idx].audio_file;
+    audio.playbackRate = playbackSpeed;
+    
+    // Update timeline end marker
+    document.getElementById('timelineEnd').textContent = formatTime(segments[idx].duration);
+    
+    renderLayerProgress();
+    renderLayer();
+}
+
+function renderLayerProgress() {
+    const container = document.getElementById('layerProgress');
+    container.innerHTML = LAYERS.map((layer, i) => {
+        let cls = 'layer-dot';
+        if (i < currentLayerIdx) cls += ' done';
+        if (i === currentLayerIdx) cls += ' active';
+        return `<div class="${cls}" data-layer="${layer.id}"></div>`;
+    }).join('');
+}
+
+function renderLayer() {
+    const layer = LAYERS[currentLayerIdx];
+    
+    // Update question card
+    document.getElementById('layerBadge').textContent = layer.name;
+    document.getElementById('layerBadge').style.background = layer.color;
+    document.getElementById('questionCard').style.borderLeftColor = layer.color;
+    document.querySelector('.question-layer span:last-child').textContent = `Layer ${currentLayerIdx + 1} of ${LAYERS.length}`;
+    document.getElementById('questionText').textContent = layer.question;
+    document.getElementById('questionHint').textContent = layer.hint;
+    
+    // Show/hide timeline vs standard waveform
+    const isConceptsLayer = layer.type === 'timeline-tagging';
+    document.getElementById('standardWaveform').classList.toggle('hidden', isConceptsLayer);
+    document.getElementById('timelineContainer').classList.toggle('hidden', !isConceptsLayer);
+    document.getElementById('dictionaryPanel').classList.toggle('hidden', !isConceptsLayer);
+    document.getElementById('needsAttentionPanel').style.display = isConceptsLayer ? '' : 'none';
+    
+    // Clear selection when entering concepts layer
+    if (isConceptsLayer) {
+        clearSelection();
+        setConceptType('lemma'); // Reset to lemma mode
+        renderConceptRegions();
+        renderConceptChips();
+        renderQuickTags();
+        renderDictionaryPanel();
+        renderNeedsAttentionPanel();
+        hideSufficiencyNotice();
+    }
+    
+    renderLayerProgress();
+    renderOptions();
+}
+
+function renderOptions() {
+    const layer = LAYERS[currentLayerIdx];
+    const container = document.getElementById('optionsContainer');
+    
+    // Hide options container for timeline-tagging type
+    if (layer.type === 'timeline-tagging') {
+        container.innerHTML = '';
+        return;
+    }
+    
+    if (layer.type === 'single-select') {
+        renderSingleSelect(layer, container);
+    } else if (layer.type === 'role-input') {
+        renderRoleInputs(layer, container);
+    } else if (layer.type === 'multi-field') {
+        renderMultiField(layer, container);
+    }
+}
+
+function renderSingleSelect(layer, container) {
+    const field = layer.fields[0];
+    const currentVal = currentData[layer.id]?.[field.id];
+    
+    container.innerHTML = `
+        <div class="options-label">${field.label}</div>
+        <div class="options-grid">
+            ${field.options.map(opt => `
+                <button class="option-btn ${currentVal === opt.value ? 'selected' : ''}" 
+                        onclick="selectOption('${layer.id}', '${field.id}', '${opt.value}')">
+                    <div class="icon">${opt.icon}</div>
+                    <div class="label">${opt.label}</div>
+                    <div class="sublabel">${opt.sublabel}</div>
+                </button>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderRoleInputs(layer, container) {
+    container.innerHTML = layer.fields.map(field => `
+        <div class="role-input-group">
+            <label class="role-label">
+                <span class="dot" style="background: ${field.color}"></span>
+                ${field.label}
+            </label>
+            <input type="text" class="role-input" 
+                   placeholder="${field.hint}"
+                   value="${currentData[layer.id]?.[field.id] || ''}"
+                   onchange="setRoleValue('${layer.id}', '${field.id}', this.value)">
+        </div>
+    `).join('');
+}
+
+function renderMultiField(layer, container) {
+    container.innerHTML = layer.fields.map(field => `
+        <div style="margin-bottom: 16px;">
+            <div class="options-label">${field.label}</div>
+            <div class="chips-container">
+                ${field.options.map(opt => `
+                    <button class="chip ${currentData[layer.id]?.[field.id] === opt.value ? 'selected' : ''}"
+                            onclick="selectOption('${layer.id}', '${field.id}', '${opt.value}')">
+                        ${opt.label}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectOption(layerId, fieldId, value) {
+    if (!currentData[layerId]) currentData[layerId] = {};
+    currentData[layerId][fieldId] = value;
+    renderOptions();
+}
+
+function setRoleValue(layerId, fieldId, value) {
+    if (!currentData[layerId]) currentData[layerId] = {};
+    
+    if (value.trim()) {
+        currentData[layerId][fieldId] = value.trim();
+    } else {
+        delete currentData[layerId][fieldId];
+    }
+}
+
+// ============ NAVIGATION ============
+function nextLayer() {
+    saveCurrentSegment();
+    
+    if (currentLayerIdx < LAYERS.length - 1) {
+        currentLayerIdx++;
+        renderLayer();
+    } else if (currentSegIdx < segments.length - 1) {
+        loadSegment(currentSegIdx + 1);
+    } else {
+        showResults();
+    }
+}
+
+function skipLayer() {
+    if (currentLayerIdx < LAYERS.length - 1) {
+        currentLayerIdx++;
+        renderLayer();
+    } else if (currentSegIdx < segments.length - 1) {
+        saveCurrentSegment();
+        loadSegment(currentSegIdx + 1);
+    } else {
+        saveCurrentSegment();
+        showResults();
+    }
+}
+
+function prevSegment() {
+    if (currentSegIdx > 0) {
+        saveCurrentSegment();
+        loadSegment(currentSegIdx - 1);
+    }
+}
+
+function nextSegment() {
+    if (currentSegIdx < segments.length - 1) {
+        saveCurrentSegment();
+        loadSegment(currentSegIdx + 1);
+    }
+}
+
+function saveCurrentSegment() {
+    currentData.retrieval_tags = generateRetrievalTags(currentData);
+    annotations[segments[currentSegIdx].id] = JSON.parse(JSON.stringify(currentData));
+}
+
+function generateRetrievalTags(data) {
+    const tags = [];
+    
+    if (data.event?.category) {
+        tags.push(`event_${data.event.category.toLowerCase()}`);
+    }
+    
+    if (data.emotion?.type && data.emotion.type !== 'neutral') {
+        tags.push(`emotion_${data.emotion.type}`);
+    }
+    
+    if (data.discourse?.function) {
+        tags.push(`discourse_${data.discourse.function.toLowerCase()}`);
+    }
+    
+    if (data.pragmatics?.register) {
+        tags.push(`register_${data.pragmatics.register}`);
+    }
+    
+    if (data.modifiers?.evidentiality) {
+        tags.push(`evidentiality_${data.modifiers.evidentiality}`);
+    }
+    
+    if (data.discourse?.prominence === 'peak' || data.discourse?.prominence === 'high') {
+        tags.push('high_prominence');
+    }
+    
+    if (data.emotion?.type && data.discourse?.function) {
+        tags.push(`${data.emotion.type}_${data.discourse.function.toLowerCase()}`);
+    }
+    
+    // Add concept labels as retrieval tags
+    if (data.concepts && data.concepts.length > 0) {
+        data.concepts.forEach(c => {
+            tags.push(`concept_${c.label.toLowerCase().replace(/\s+/g, '_')}`);
+        });
+    }
+    
+    return tags;
+}
+
+// ============ AUDIO ============
+function togglePlay() {
+    if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+    } else {
+        audio.play().catch(err => {
+            alert('Audio file not available for playback.');
+        });
+        isPlaying = true;
+    }
+    updatePlayIcon();
+}
+
+function updatePlayIcon() {
+    document.getElementById('playIcon').className = isPlaying ? 'pause-icon' : 'play-icon';
+}
+
+function toggleSpeed() {
+    const speeds = [1, 0.75, 0.5];
+    const idx = speeds.indexOf(playbackSpeed);
+    playbackSpeed = speeds[(idx + 1) % speeds.length];
+    audio.playbackRate = playbackSpeed;
+    document.getElementById('speedBtn').textContent = playbackSpeed + '×';
+}
+
+audio.ontimeupdate = () => {
+    const time = audio.currentTime;
+    const duration = audio.duration || segments[currentSegIdx].duration;
+    
+    document.getElementById('timeDisplay').textContent = 
+        formatTime(time) + ' / ' + formatTime(duration);
+    
+    const progress = (time / duration) * 100;
+    document.getElementById('waveformProgress').style.width = progress + '%';
+    
+    // Update timeline playhead
+    document.getElementById('timelinePlayhead').style.left = progress + '%';
+};
+
+audio.onended = () => {
+    isPlaying = false;
+    updatePlayIcon();
+};
+
+function formatTime(s) {
+    if (isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+// ============ RESULTS ============
+function showResults() {
+    saveCurrentSegment();
+    
+    document.getElementById('taggingScreen').classList.add('hidden');
+    document.getElementById('resultsScreen').classList.remove('hidden');
+    document.getElementById('resultsScreen').style.display = 'flex';
+    
+    renderResults();
+}
+
+function renderResults() {
+    const container = document.getElementById('resultsContent');
+    
+    let html = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">📚</div>
+            <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 4px;">Language Archive Ready</div>
+            <div style="opacity: 0.6; margin-bottom: 20px;">${segments.length} segments tagged with Tripod Ontology v5.2</div>
+        </div>
+    `;
+    
+    segments.forEach((seg, i) => {
+        const data = annotations[seg.id];
+        if (!data) return;
+        
+        const eventCategory = data.event?.category || 'Not set';
+        const emotion = data.emotion?.type || 'neutral';
+        const discourse = data.discourse?.function || 'Not set';
+        const concepts = data.concepts || [];
+        
+        html += `
+            <div class="results-card">
+                <div class="results-card-header">
+                    <div class="results-card-title">Segment ${i + 1}</div>
+                    <button class="results-play-btn" onclick="playSegment(${i})">▶ Play</button>
+                </div>
+                
+                <div class="tag-row">
+                    <span class="tag" style="background: var(--color-event);">${eventCategory}</span>
+                    <span class="tag" style="background: var(--color-emotion);">${emotion}</span>
+                    <span class="tag" style="background: var(--color-discourse);">${discourse}</span>
+                </div>
+                
+                ${data.participants && Object.keys(data.participants).length > 0 ? `
+                    <div style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 8px;">
+                        ${Object.entries(data.participants).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join(' • ')}
+                    </div>
+                ` : ''}
+                
+                ${concepts.length > 0 ? `
+                    <div class="concepts-summary">
+                        <div class="concepts-summary-label">Lexical Concepts (${concepts.length})</div>
+                        <div class="concepts-summary-items">
+                            ${concepts.map(c => `
+                                <span class="concepts-summary-item">${c.label} (${(c.start_ms/1000).toFixed(2)}s-${(c.end_ms/1000).toFixed(2)}s)</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${data.retrieval_tags?.length > 0 ? `
+                    <div style="font-size: 0.75rem; margin-top: 8px;">
+                        <strong>Retrieval Tags:</strong> ${data.retrieval_tags.join(', ')}
+                    </div>
+                ` : ''}
+                
+                <details>
+                    <summary style="cursor: pointer; font-size: 0.8rem; opacity: 0.7; margin-top: 8px;">View Full JSON</summary>
+                    <div class="json-preview">${JSON.stringify(formatExportSegment(seg, data), null, 2)}</div>
+                </details>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function playSegment(idx) {
+    audio.src = segments[idx].audio_file;
+    audio.play().catch(() => {});
+}
+
+function formatExportSegment(seg, data) {
+    return {
+        segment: seg.audio_file,
+        segment_id: seg.id,
+        duration: seg.duration,
+        semantic_metadata: {
+            event: data.event || {},
+            participants: data.participants || {},
+            modifiers: data.modifiers || {},
+            discourse: data.discourse || {},
+            pragmatics: data.pragmatics || {},
+            emotion: data.emotion || {}
+        },
+        concepts: data.concepts || [],
+        retrieval_tags: data.retrieval_tags || []
+    };
+}
+
+function downloadArchive() {
+    // Calculate sufficiency stats
+    const lemmaStats = {};
+    Object.entries(conceptDictionary.lemmas).forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'lemma');
+        lemmaStats[label] = {
+            count: data.count,
+            segments: data.segments,
+            contexts: data.contexts,
+            status: status.status,
+            sufficient: status.status === 'sufficient'
+        };
+    });
+    
+    const morphemeStats = {};
+    Object.entries(conceptDictionary.morphemes).forEach(([label, data]) => {
+        const status = getConceptStatus(label, 'morpheme');
+        const variation = getMorphemeVariation(label);
+        morphemeStats[label] = {
+            count: data.count,
+            segments: data.segments,
+            roots: data.roots,
+            unique_roots: variation.roots,
+            status: status.status,
+            sufficient: status.status === 'sufficient' && variation.sufficient
+        };
+    });
+    
+    const exportData = {
+        export_type: 'language_archive',
+        export_date: new Date().toISOString(),
+        language: document.getElementById('userLanguage').value || 'Unknown',
+        facilitator: document.getElementById('userName').value || 'Unknown',
+        ontology_version: 'Tripod v5.2',
+        segment_count: segments.length,
+        concept_dictionary: {
+            lemmas: Object.keys(conceptDictionary.lemmas),
+            morphemes: Object.keys(conceptDictionary.morphemes),
+            statistics: {
+                total_lemmas: Object.keys(conceptDictionary.lemmas).length,
+                total_morphemes: Object.keys(conceptDictionary.morphemes).length,
+                sufficient_lemmas: Object.values(lemmaStats).filter(s => s.sufficient).length,
+                sufficient_morphemes: Object.values(morphemeStats).filter(s => s.sufficient).length,
+                lemma_details: lemmaStats,
+                morpheme_details: morphemeStats
+            },
+            thresholds: SUFFICIENCY_THRESHOLDS
+        },
+        segments: segments.map(seg => {
+            const data = annotations[seg.id];
+            return data ? formatExportSegment(seg, data) : null;
+        }).filter(Boolean)
+    };
+    
+    const a = document.createElement('a');
+    a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    a.download = `language_archive_${document.getElementById('userLanguage').value || 'data'}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
+</script>
+
+</body>
+</html>
