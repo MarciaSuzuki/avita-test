@@ -1749,6 +1749,233 @@
         .overview-actions .action-btn {
             flex: 1;
         }
+        
+        /* Isolated Pronunciation Recording */
+        .pronunciation-recorder {
+            margin-top: 12px;
+            padding: 14px;
+            background: rgba(190, 74, 1, 0.08);
+            border-radius: 10px;
+            border: 1px solid rgba(190, 74, 1, 0.2);
+            display: none;
+        }
+        
+        .pronunciation-recorder.visible {
+            display: block;
+        }
+        
+        .recorder-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .recorder-icon {
+            font-size: 1.1rem;
+        }
+        
+        .recorder-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--brand-green);
+        }
+        
+        .recorder-subtitle {
+            font-size: 0.75rem;
+            color: var(--brand-green);
+            opacity: 0.7;
+        }
+        
+        .recorder-optional {
+            font-size: 0.65rem;
+            background: var(--brand-sand);
+            color: var(--brand-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .recorder-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .record-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid var(--brand-terracotta);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        
+        .record-btn:hover {
+            background: rgba(190, 74, 1, 0.1);
+        }
+        
+        .record-btn.recording {
+            background: var(--brand-terracotta);
+            animation: pulse-record 1s infinite;
+        }
+        
+        @keyframes pulse-record {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(190, 74, 1, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(190, 74, 1, 0); }
+        }
+        
+        .record-btn-inner {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--brand-terracotta);
+            transition: all 0.15s;
+        }
+        
+        .record-btn.recording .record-btn-inner {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            background: white;
+        }
+        
+        .recorder-status {
+            flex: 1;
+        }
+        
+        .recorder-status-text {
+            font-size: 0.85rem;
+            color: var(--brand-green);
+            font-weight: 600;
+        }
+        
+        .recorder-status-time {
+            font-size: 0.75rem;
+            color: var(--brand-terracotta);
+            font-weight: 700;
+        }
+        
+        .recorder-waveform {
+            height: 32px;
+            background: rgba(197, 194, 159, 0.2);
+            border-radius: 6px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 0 8px;
+            overflow: hidden;
+        }
+        
+        .recorder-waveform-bar {
+            width: 3px;
+            background: var(--brand-terracotta);
+            border-radius: 2px;
+            transition: height 0.05s;
+        }
+        
+        /* Recorded audio playback */
+        .recorded-audio {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(119, 125, 69, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(119, 125, 69, 0.25);
+        }
+        
+        .recorded-audio.visible {
+            display: block;
+        }
+        
+        .recorded-audio-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .recorded-audio-label {
+            font-size: 0.75rem;
+            color: var(--color-sufficient);
+            font-weight: 600;
+        }
+        
+        .recorded-audio-check {
+            font-size: 0.85rem;
+        }
+        
+        .recorded-audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .play-recorded-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--color-sufficient);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        
+        .play-recorded-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .play-recorded-btn .play-icon-small {
+            width: 0; height: 0;
+            border-left: 10px solid white;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            margin-left: 2px;
+        }
+        
+        .play-recorded-btn .pause-icon-small {
+            width: 10px; height: 12px;
+            border-left: 3px solid white;
+            border-right: 3px solid white;
+        }
+        
+        .recorded-duration {
+            font-size: 0.8rem;
+            color: var(--brand-green);
+            opacity: 0.7;
+        }
+        
+        .delete-recording-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--brand-terracotta);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .delete-recording-btn:hover {
+            background: rgba(190, 74, 1, 0.1);
+        }
+        
+        /* Concept chip with recording indicator */
+        .concept-chip.has-recording::after {
+            content: '🎤';
+            font-size: 0.7rem;
+            margin-left: 4px;
+        }
     </style>
 </head>
 <body>
@@ -2071,6 +2298,44 @@
                         <div class="dictionary-dropdown" id="dictionaryDropdown"></div>
                     </div>
                     <button class="add-concept-btn" id="addConceptBtn" onclick="addConcept()">+ Add</button>
+                </div>
+                
+                <!-- Isolated Pronunciation Recorder -->
+                <div class="pronunciation-recorder" id="pronunciationRecorder">
+                    <div class="recorder-header">
+                        <span class="recorder-icon">🎤</span>
+                        <div>
+                            <div class="recorder-title">Record Isolated Pronunciation</div>
+                            <div class="recorder-subtitle">Say the word/phrase clearly by itself</div>
+                        </div>
+                        <span class="recorder-optional">Optional</span>
+                    </div>
+                    
+                    <div class="recorder-controls">
+                        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">
+                            <div class="record-btn-inner" id="recordBtnInner"></div>
+                        </button>
+                        <div class="recorder-status">
+                            <div class="recorder-status-text" id="recorderStatusText">Tap to record</div>
+                            <div class="recorder-status-time" id="recorderStatusTime"></div>
+                            <div class="recorder-waveform" id="recorderWaveform"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Playback of recorded audio -->
+                    <div class="recorded-audio" id="recordedAudio">
+                        <div class="recorded-audio-header">
+                            <span class="recorded-audio-check">✓</span>
+                            <span class="recorded-audio-label">Pronunciation recorded</span>
+                        </div>
+                        <div class="recorded-audio-controls">
+                            <button class="play-recorded-btn" id="playRecordedBtn" onclick="togglePlayRecording()">
+                                <div class="play-icon-small" id="playRecordedIcon"></div>
+                            </button>
+                            <span class="recorded-duration" id="recordedDuration">0:00</span>
+                            <button class="delete-recording-btn" onclick="deleteRecording()">🗑️ Delete</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Sufficiency notice (shows when selecting a known concept) -->
@@ -2432,6 +2697,24 @@ let conceptDictionary = {
     morphemes: {}    // { "PLURAL": { count: 5, roots: ["hunter", "lion", "tree"], segments: [1, 3, 4, 6, 7] } }
 };
 
+// ============ PRONUNCIATION RECORDING STATE ============
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordingStartTime = null;
+let recordingTimer = null;
+let currentRecordingBlob = null;
+let currentRecordingUrl = null;
+let recordedAudioElement = new Audio();
+let isPlayingRecording = false;
+let recorderWaveformBars = [];
+let audioContext = null;
+let analyser = null;
+let microphoneStream = null;
+
+// Store recordings with concepts: { conceptId: { blob, url, duration } }
+let conceptRecordings = {};
+
 // Track which concepts need more examples
 function getConceptStatus(label, type) {
     const dict = type === 'morpheme' ? conceptDictionary.morphemes : conceptDictionary.lemmas;
@@ -2683,6 +2966,188 @@ function updateSelectionDisplay() {
 function showSelectionInfo() {
     document.getElementById('selectionInfo').classList.add('visible');
     document.getElementById('conceptInput').focus();
+    
+    // Show pronunciation recorder
+    document.getElementById('pronunciationRecorder').classList.add('visible');
+    initRecorderWaveform();
+    resetRecorder();
+}
+
+// ============ PRONUNCIATION RECORDING ============
+function initRecorderWaveform() {
+    const container = document.getElementById('recorderWaveform');
+    container.innerHTML = '';
+    recorderWaveformBars = [];
+    
+    const barCount = 30;
+    for (let i = 0; i < barCount; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'recorder-waveform-bar';
+        bar.style.height = '4px';
+        container.appendChild(bar);
+        recorderWaveformBars.push(bar);
+    }
+}
+
+function resetRecorder() {
+    isRecording = false;
+    currentRecordingBlob = null;
+    currentRecordingUrl = null;
+    recordedChunks = [];
+    
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recorderStatusText').textContent = 'Tap to record';
+    document.getElementById('recorderStatusTime').textContent = '';
+    document.getElementById('recordedAudio').classList.remove('visible');
+    
+    // Reset waveform
+    recorderWaveformBars.forEach(bar => bar.style.height = '4px');
+}
+
+async function toggleRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        microphoneStream = stream;
+        
+        // Setup audio analysis for waveform visualization
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        analyser.fftSize = 64;
+        
+        // Setup MediaRecorder
+        mediaRecorder = new MediaRecorder(stream);
+        recordedChunks = [];
+        
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                recordedChunks.push(e.data);
+            }
+        };
+        
+        mediaRecorder.onstop = () => {
+            currentRecordingBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+            currentRecordingUrl = URL.createObjectURL(currentRecordingBlob);
+            recordedAudioElement.src = currentRecordingUrl;
+            
+            // Show recorded audio controls
+            document.getElementById('recordedAudio').classList.add('visible');
+            
+            // Get duration
+            recordedAudioElement.onloadedmetadata = () => {
+                const dur = recordedAudioElement.duration;
+                document.getElementById('recordedDuration').textContent = formatTime(dur);
+            };
+            
+            // Stop microphone
+            if (microphoneStream) {
+                microphoneStream.getTracks().forEach(track => track.stop());
+            }
+        };
+        
+        // Start recording
+        mediaRecorder.start();
+        isRecording = true;
+        recordingStartTime = Date.now();
+        
+        // Update UI
+        document.getElementById('recordBtn').classList.add('recording');
+        document.getElementById('recorderStatusText').textContent = 'Recording...';
+        
+        // Start timer and waveform animation
+        updateRecordingTimer();
+        animateRecorderWaveform();
+        
+    } catch (err) {
+        console.error('Error accessing microphone:', err);
+        alert('Could not access microphone. Please allow microphone access and try again.');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    
+    isRecording = false;
+    clearInterval(recordingTimer);
+    
+    // Stop audio context
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    
+    // Update UI
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recorderStatusText').textContent = 'Recording saved';
+    
+    // Reset waveform
+    recorderWaveformBars.forEach(bar => bar.style.height = '4px');
+}
+
+function updateRecordingTimer() {
+    recordingTimer = setInterval(() => {
+        if (!isRecording) return;
+        
+        const elapsed = (Date.now() - recordingStartTime) / 1000;
+        document.getElementById('recorderStatusTime').textContent = formatTime(elapsed);
+    }, 100);
+}
+
+function animateRecorderWaveform() {
+    if (!isRecording || !analyser) return;
+    
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(dataArray);
+    
+    // Map frequency data to waveform bars
+    const step = Math.floor(dataArray.length / recorderWaveformBars.length);
+    recorderWaveformBars.forEach((bar, i) => {
+        const value = dataArray[i * step] || 0;
+        const height = Math.max(4, (value / 255) * 28);
+        bar.style.height = height + 'px';
+    });
+    
+    requestAnimationFrame(animateRecorderWaveform);
+}
+
+function togglePlayRecording() {
+    if (isPlayingRecording) {
+        recordedAudioElement.pause();
+        isPlayingRecording = false;
+    } else {
+        recordedAudioElement.play();
+        isPlayingRecording = true;
+    }
+    updatePlayRecordedIcon();
+}
+
+function updatePlayRecordedIcon() {
+    const icon = document.getElementById('playRecordedIcon');
+    icon.className = isPlayingRecording ? 'pause-icon-small' : 'play-icon-small';
+}
+
+recordedAudioElement.onended = () => {
+    isPlayingRecording = false;
+    updatePlayRecordedIcon();
+};
+
+function deleteRecording() {
+    if (currentRecordingUrl) {
+        URL.revokeObjectURL(currentRecordingUrl);
+    }
+    resetRecorder();
 }
 
 function clearSelection() {
@@ -2697,6 +3162,13 @@ function clearSelection() {
     
     document.getElementById('selectionInfo').classList.remove('visible');
     document.getElementById('conceptInput').value = '';
+    
+    // Hide and reset pronunciation recorder
+    document.getElementById('pronunciationRecorder').classList.remove('visible');
+    if (isRecording) {
+        stopRecording();
+    }
+    resetRecorder();
     
     // Reset morpheme button selection
     document.querySelectorAll('.morpheme-btn').forEach(btn => btn.classList.remove('selected'));
@@ -2772,8 +3244,12 @@ function addConcept() {
         }
     }
     
+    // Generate unique ID for this concept instance
+    const conceptId = `${currentSegIdx}_${label}_${startMs}_${Date.now()}`;
+    
     // Add to segment data
     const conceptEntry = {
+        id: conceptId,
         label: label,
         start_ms: startMs,
         end_ms: endMs,
@@ -2782,6 +3258,16 @@ function addConcept() {
     
     if (associatedLemma) {
         conceptEntry.associated_lemma = associatedLemma;
+    }
+    
+    // Save isolated pronunciation recording if one was made
+    if (currentRecordingBlob) {
+        conceptEntry.has_isolated_pronunciation = true;
+        conceptRecordings[conceptId] = {
+            blob: currentRecordingBlob,
+            url: currentRecordingUrl,
+            duration: recordedAudioElement.duration || 0
+        };
     }
     
     currentData.concepts.push(conceptEntry);
@@ -3183,14 +3669,15 @@ function renderConceptChips() {
     
     container.innerHTML = currentData.concepts.map((concept, idx) => {
         const isMorpheme = concept.type === 'morpheme';
-        const bgColor = isMorpheme ? 'rgba(233, 30, 99, 0.15)' : 'rgba(241, 196, 15, 0.15)';
-        const borderColor = isMorpheme ? '#e91e63' : 'var(--color-concepts)';
-        const textColor = isMorpheme ? '#e91e63' : 'var(--color-concepts)';
+        const hasRecording = concept.has_isolated_pronunciation;
+        const bgColor = isMorpheme ? 'rgba(137, 170, 163, 0.15)' : 'rgba(119, 125, 69, 0.15)';
+        const borderColor = isMorpheme ? 'var(--color-morpheme)' : 'var(--color-concepts)';
+        const textColor = isMorpheme ? 'var(--color-morpheme)' : 'var(--color-concepts)';
         
         return `
-            <div class="concept-chip" style="background: ${bgColor}; border-color: ${borderColor}; color: ${textColor};" 
+            <div class="concept-chip ${hasRecording ? 'has-recording' : ''}" style="background: ${bgColor}; border-color: ${borderColor}; color: ${textColor};" 
                  onclick="playRegion(${concept.start_ms}, ${concept.end_ms})">
-                <span>${isMorpheme ? '🔗 ' : ''}${concept.label}</span>
+                <span>${isMorpheme ? '🔗 ' : ''}${concept.label}${hasRecording ? ' 🎤' : ''}</span>
                 <span class="time-range">${(concept.start_ms/1000).toFixed(2)}s - ${(concept.end_ms/1000).toFixed(2)}s</span>
                 <button class="remove-btn" onclick="event.stopPropagation(); removeConcept(${idx})">×</button>
             </div>
@@ -3775,6 +4262,9 @@ function downloadArchive() {
         };
     });
     
+    // Count isolated pronunciation recordings
+    const recordingsCount = Object.keys(conceptRecordings).length;
+    
     const exportData = {
         export_type: 'language_archive',
         export_date: new Date().toISOString(),
@@ -3782,6 +4272,7 @@ function downloadArchive() {
         facilitator: document.getElementById('userName').value || 'Unknown',
         ontology_version: 'Tripod v5.2',
         segment_count: segments.length,
+        isolated_pronunciations_count: recordingsCount,
         concept_dictionary: {
             lemmas: Object.keys(conceptDictionary.lemmas),
             morphemes: Object.keys(conceptDictionary.morphemes),
@@ -3801,10 +4292,38 @@ function downloadArchive() {
         }).filter(Boolean)
     };
     
+    // Download JSON metadata
     const a = document.createElement('a');
     a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
     a.download = `language_archive_${document.getElementById('userLanguage').value || 'data'}_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+    
+    // If there are recordings, offer to download them too
+    if (recordingsCount > 0) {
+        setTimeout(() => {
+            if (confirm(`You have ${recordingsCount} isolated pronunciation recording(s). Would you like to download them as well?`)) {
+                downloadRecordings();
+            }
+        }, 500);
+    }
+}
+
+// Download all isolated pronunciation recordings
+async function downloadRecordings() {
+    const entries = Object.entries(conceptRecordings);
+    
+    for (let i = 0; i < entries.length; i++) {
+        const [conceptId, recording] = entries[i];
+        const filename = `pronunciation_${conceptId.replace(/[^a-zA-Z0-9_]/g, '_')}.webm`;
+        
+        const a = document.createElement('a');
+        a.href = recording.url;
+        a.download = filename;
+        a.click();
+        
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
 }
 </script>
 
